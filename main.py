@@ -1,16 +1,28 @@
-
 from fastapi import FastAPI
 from fastapi import HTTPException
+from fastapi.params import Depends
+from sqlalchemy import Boolean
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from fastapi import Depends
+from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
+
+import models
+from habit_operations import *
 from models import *
-from user_operations import *
+from db_operations import *
 from typing import List
-from fastapi import FastAPI
-from models import user, userWithId
-from user_operations import get_next_ID, write_user_into_csv
-from product_operations import new_product, read_all_products, modify_product_by_name
-from models import product
-from habit_operations import new_habit, read_all_habits, modify_habit_by_name
+from contextlib import asynccontextmanager
+from database import Base
+from dbconnection import AsyncSessionLocal, get_db_session, get_engine
+from typing import Annotated
+from sqlalchemy.ext.asyncio import AsyncSession
+from db_operations import *
+from user_operations import *
+from products_operations import *
 
 app = FastAPI()
 
@@ -69,21 +81,33 @@ def delete_user(user_id: int):
 #products
 
 
-@app.post("/products/", response_model=product)
-def create_product(p: product):
-    return new_product(p)
+@app.post("/products/", response_model=Product)
+def create_product_view(p: Product, db: Session = Depends(get_db_session())):
+    return create_product(db=db, p=p)
 
-@app.get("/products/", response_model=list[product])
-def get_all_products():
-    return read_all_products()
+@app.get("/products/", response_model=list[Product])
+def get_all_products_view(db: Session = Depends(get_db_session)):
+    return get_all_products(db=db)
 
-@app.put("/products/{product_name}", response_model=product)
-def update_product(product_name: str, updated_data: dict):
-    updated = modify_product_by_name(product_name, updated_data)
+@app.get("/products/{product_name}", response_model=Product)
+def get_product_by_name_view(product_name: str, db: Session = Depends(get_db_session)):
+    product = get_product_by_name(db=db, product_name=product_name)
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+
+@app.put("/products/{product_name}", response_model=Product)
+def update_product_view(product_name: str, updated_data: Product, db: Session = Depends(get_db_session())):
+    updated = update_product(db=db, product_name=product_name, updated_data=updated_data.dict())
     if updated is None:
         raise HTTPException(status_code=404, detail="Product not found")
     return updated
-
+@app.delete("/products/{product_name}", response_model=Product)
+def delete_product_view(product_name: str, db: Session = Depends(get_db_session)):
+    deleted = delete_product(db=db, product_name=product_name)
+    if deleted is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return deleted
 
 
 
@@ -102,3 +126,9 @@ def update_habit(habit_name: str, updated_data: dict):
     if updated is None:
         raise HTTPException(status_code=404, detail="Habit not found")
     return updated
+
+#database_products
+
+
+
+

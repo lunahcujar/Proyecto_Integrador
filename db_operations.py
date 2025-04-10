@@ -1,11 +1,22 @@
-from sqlalchemy import Column, Integer, String, Float
-from database import Base
+import pandas as pd
+import sqlite3
 
-class Product(Base):
-    __tablename__ = "products"
+# Ruta del archivo CSV generado
+file_path = "products.csv"  # Asegúrate de que esté en la misma carpeta del proyecto o ajusta la ruta
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    skin = Column(String)
-    ingredients = Column(String)
-    price = Column(Float)
+# Cargar CSV
+df = pd.read_csv(file_path)
+
+# Seleccionar columnas necesarias (en este caso ya están limpias y son las únicas)
+columnas_deseadas = ["id", "name", "skin", "ingredients", "price"]
+df_filtrado = df[columnas_deseadas]
+
+# Guardar en base de datos SQLite
+conn = sqlite3.connect("productos_piel.db")
+df_filtrado.to_sql("productos", conn, if_exists="replace", index=False)
+conn.close()
+
+print("✅ Base de datos 'productos_piel.db' creada con éxito con los campos seleccionados.")
+
+
+

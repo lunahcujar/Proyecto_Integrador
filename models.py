@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Optional
-
 from pydantic import BaseModel, Field
+from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Enum as SQLAlchemyEnum
+from enum import Enum
 
 class user(BaseModel):
     name:str = Field(..., min_length=3, max_length=50)
@@ -24,12 +26,26 @@ class habit(BaseModel):
     frequency:str = Field(...,min_length=3,max_length=25)
     user_id:int
 
-class product(BaseModel):
-    id:int=Field(...,min_length=1, max_length=100)
-    name:str = Field(..., min_length=3, max_length=20)
-    skin:Optional[str] = Field(...)
-    ingredients:str = Field(...,min_length=3,max_length=100)
-    price: float = Field(..., min_length=1, max_length=100)
+class SkinType(str,Enum):
+    seca="seca"
+    grasa="grasa"
+    sensible="sensible"
+    mixta="mixta"
+    normal="normal"
+    acneica="acneica"
+    madura="madura"
+    todo_tipo="todo_tipo"
+
+
+# Modelo Product con el campo skin como Enum
+class Product(BaseModel):
+
+    id :int=Field(...,min_length=1, max_length=100)
+    name: str=Field(...,min_length=3, max_length=20)
+    skin:SkinType=Field(...)  # Usamos el Enum aquí
+    ingredients:str=Field(...,min_length=3,max_length=100)
+    price:float=Field(...,min_length=3,max_length=100)
+
 
 class habitRecord(BaseModel):
     id: int = Field(..., min_length=1, max_length=100)
