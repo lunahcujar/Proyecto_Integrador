@@ -1,10 +1,10 @@
-from sqlalchemy import create_engine
+from contextlib import asynccontextmanager
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-# URL de conexión de ejemplo (cámbiala a tu configuración de base de dato
-DATABASE_URL = "sqlite+aiosqlite:///./products_piel.db"
-
+# URL de conexión de ejemplo (ajústala a tu configuración de base de datos)
+DATABASE_URL = "sqlite+aiosqlite:///./products_piel.db"  # Para SQLite asíncrono
 
 # Crear un motor asíncrono
 engine = create_async_engine(DATABASE_URL, echo=True)
@@ -16,10 +16,11 @@ AsyncSessionLocal = sessionmaker(
     expire_on_commit=False,
 )
 
-# Función para obtener la sesión de base de datos
+# Función para obtener la sesión de base de datos de manera asíncrona
+@asynccontextmanager
 async def get_db_session():
     async with AsyncSessionLocal() as session:
-        yield session
+        yield session  # Devuelve la sesión para que la use FastAPI
 
 # Crear un motor síncrono si lo necesitas
 def get_engine():

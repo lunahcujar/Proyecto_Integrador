@@ -21,10 +21,15 @@ class UpdatedUser(BaseModel):
     mail:Optional[str] = Field(..., min_length=3, max_length=25)
 
 class habit(BaseModel):
-    id:int=Field(...,min_length=1, max_length=100)
+    id:int=Field(...,)
     name:str = Field(..., min_length=3, max_length=20)
-    frequency:str = Field(...,min_length=3,max_length=25)
+    frequency:str = Field(...,max_length=25)
     user_id:int
+
+class UpdatedHabit(BaseModel):
+    name: Optional[str] = Field(None, min_length=3, max_length=20)
+    frequency: Optional[str] = Field(None, max_length=25)
+    user_id: Optional[int] = None
 
 class SkinType(str,Enum):
     seca="seca"
@@ -40,28 +45,14 @@ class SkinType(str,Enum):
 # Modelo Product con el campo skin como Enum
 class Product(BaseModel):
 
-    id :int=Field(...,min_length=1, max_length=100)
+    id :int=Field(...,)
     name: str=Field(...,min_length=3, max_length=20)
     skin:SkinType=Field(...)  # Usamos el Enum aquí
     ingredients:str=Field(...,min_length=3,max_length=100)
     price:float=Field(...,min_length=3,max_length=100)
 
 
-class habitRecord(BaseModel):
-    id: int = Field(..., min_length=1, max_length=100)
-    user_id: int
-    habit_id: int
-    timestamp: datetime
-    effectiveness: Optional[int] = Field(None, ge=1, le=5)
-
-class weatherCondition(BaseModel):
-    id: int = Field(..., gt=0)
-    user_id: int
-    date: datetime
-    temperature: float
-    habit_related: Optional[str] = Field(None, max_length=100)
 
 
-class UpdatedPet(BaseModel):
-    name: Optional[str] = Field(..., min_length=3, max_length=20)
-    breed:Optional[str] = Field(..., min_length=3, max_length=25)
+
+

@@ -2,14 +2,14 @@ from fastapi import FastAPI
 from fastapi import HTTPException
 from fastapi.params import Depends
 from sqlalchemy import Boolean
-
+from fastapi import status
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
-
+from fastapi import Depends
 import models
 from habit_operations import *
 from models import *
@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db_operations import *
 from user_operations import *
 from products_operations import *
-
+from models import *
 app = FastAPI()
 
 @app.get("/")
@@ -80,10 +80,11 @@ def delete_user(user_id: int):
 
 #products
 
-
+"""
 @app.post("/products/", response_model=Product)
-def create_product_view(p: Product, db: Session = Depends(get_db_session())):
-    return create_product(db=db, p=p)
+async def create_product_view(p: Product, db: AsyncSession = Depends(get_db_session)):
+    # Aquí deberías agregar la lógica para crear el producto en la base de datos
+    return await create_product(db=db, p=p)  # Asumiendo que tienes la función create_product
 
 @app.get("/products/", response_model=list[Product])
 def get_all_products_view(db: Session = Depends(get_db_session)):
@@ -108,7 +109,7 @@ def delete_product_view(product_name: str, db: Session = Depends(get_db_session)
     if deleted is None:
         raise HTTPException(status_code=404, detail="Product not found")
     return deleted
-
+"""
 
 
 #habits
@@ -120,15 +121,18 @@ def create_habit(h: habit):
 def get_all_habits():
     return read_all_habits()
 
-@app.put("/habits/{habit_name}", response_model=habit)
-def update_habit(habit_name: str, updated_data: dict):
-    updated = modify_habit_by_name(habit_name, updated_data)
+@app.put("/habits/{habit_id}", response_model=habit)
+def update_habit_by_id(habit_id: int, updated_data: UpdatedHabit):
+    updated = modify_habit_by_id(habit_id, updated_data.dict(exclude_unset=True))
     if updated is None:
         raise HTTPException(status_code=404, detail="Habit not found")
     return updated
 
-#database_products
-
+@app.delete("/habits/{habit_name}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_habit(habit_name: str):
+    deleted = delete_habit_by_name(habit_name)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Habit not found")
 
 
 

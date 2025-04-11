@@ -16,23 +16,23 @@ def new_habit(habit: habit) -> habit:
 def write_habit_into_csv(habit: habit):
     with open(HABITS_FILENAME, mode="a", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=habit_fields)
-        writer.writerow(habit.model_dump())
+        writer.writerow(habit.dict())
 
 
-def modify_habit_by_name(name: str, habit_data: dict) -> Optional[habit]:
+def modify_habit_by_id(id: int, habit_data: dict) -> Optional[habit]:
     habits = read_all_habits()
     updated_habit = None
 
     for idx, h in enumerate(habits):
-        if h.name.lower() == name.lower():
-            if habit_data.get("name") is not None:
-                habits[idx].name = habit_data["name"]
-            if habit_data.get("frequency") is not None:
-                habits[idx].frequency = habit_data["frequency"]
-            if habit_data.get("user_id") is not None:
-                habits[idx].user_id = habit_data["user_id"]
-
-            updated_habit = habits[idx]
+        if h.id == id:
+            # Crear una nueva instancia del hábito con los datos actualizados
+            updated_habit = habit(
+                id=h.id,
+                name=habit_data.get("name", h.name),
+                frequency=habit_data.get("frequency", h.frequency),
+                user_id=habit_data.get("user_id", h.user_id),
+            )
+            habits[idx] = updated_habit
             break
 
     if updated_habit:
@@ -40,11 +40,12 @@ def modify_habit_by_name(name: str, habit_data: dict) -> Optional[habit]:
             writer = csv.DictWriter(file, fieldnames=habit_fields)
             writer.writeheader()
             for h in habits:
-                writer.writerow(h.model_dump())
+                writer.writerow(h.model_dump())  # Usa model_dump() con Pydantic v2
 
         return updated_habit
 
     return None
+
 
 
 def read_all_habits() -> List[habit]:
@@ -53,6 +54,7 @@ def read_all_habits() -> List[habit]:
         with open(HABITS_FILENAME, mode="r", newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file)
             for row in reader:
+                print(row)  # Para debug
                 habits.append(habit(
                     id=int(row["id"]),
                     name=row["name"],
@@ -60,5 +62,22 @@ def read_all_habits() -> List[habit]:
                     user_id=int(row["user_id"])
                 ))
     except FileNotFoundError:
-        pass
+        pass  # O puedes poner return [] aquí también si prefieres
+
     return habits
+
+
+def delete_habit_by_name(name: str) -> bool:
+    habits = read_all_habits()
+    updated_habits = [h for h in habits if h.name.lower() != name.lower()]
+
+    if len(updated_habits) == len(habits):
+        return False  # No se encontró el hábito
+
+    with open(HABITS_FILENAME, mode="w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=habit_fields)
+        writer.writeheader()
+        for h in updated_habits:
+            writer.writerow(h.model_dump())
+
+    return True
