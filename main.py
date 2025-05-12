@@ -16,7 +16,7 @@ from db_operations import *
 from typing import List
 from contextlib import asynccontextmanager
 from database import Base
-from dbconnection import AsyncSessionLocal, get_db_session, get_engine
+from dbconnection import AsyncSessionLocal, get_db_session
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 from db_operations import *
@@ -41,31 +41,33 @@ async def say_hello(name: str):
 
 # Crear usuario
 @app.post("/user", response_model=UserWithId)
-async def create_user(user: UpdatedUser):
-    new_user_instance = new_user(user.name, user.mail, user.type_skin, user.preferences)
-    return new_user_instance
+async def create_user(user: UpdatedUser, db: AsyncSession = Depends(get_db_session)):
+    return await new_user(user.name, user.mail, user.type_skin, user.preferences, db)
+
 
 #update_by_name
 @app.put("/user/by-name/{name}", response_model=UserWithId)
-def update_user_by_name(name: str, user_update: UpdatedUser):
-    updated = modify_user_by_name(name, user_update.dict(exclude_unset=True))  # Usar .dict() para convertir el modelo
+async def update_user_by_name(
+    name: str,
+    user_update: UpdatedUser,
+    db: AsyncSession = Depends(get_db_session)
+):
+    updated = await modify_user_by_name(name, user_update.dict(exclude_unset=True), db)
     if not updated:
         raise HTTPException(status_code=404, detail="User not found")
     return updated
 
 #show_all_users
 @app.get("/allusers", response_model=List[UserWithId])
-async def show_all_users():
-    return read_all_users()
+async def show_all_users(db: AsyncSession = Depends(get_db_session)):
+    return await read_all_users(db)
 
 #delete user
 @app.delete("/user/{user_id}", response_model=UserWithId)
-def delete_user(user_id: int):
-    deleted_user = remove_user_by_id(user_id)
-
+async def delete_user(user_id: int, db: AsyncSession = Depends(get_db_session)):
+    deleted_user = await remove_user_by_id(user_id, db)
     if not deleted_user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-
     return deleted_user
 
 
