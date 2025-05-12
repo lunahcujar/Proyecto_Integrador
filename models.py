@@ -38,6 +38,18 @@ class DeletedUser(Base):
     preferences = Column(Boolean, default=False)
     date = Column(DateTime, default=datetime.utcnow)
 
+class UpdatedUser(BaseModel):
+    name: str
+    mail: str
+    type_skin: str | None = None
+    preferences: bool = False
+
+class UserWithId(UpdatedUser):
+    id: int
+
+    class Config:
+        orm_mode = True
+
 
 # models/habit.py
 
