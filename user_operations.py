@@ -1,119 +1,86 @@
-import csv
-from typing import List, Optional
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 from datetime import datetime
-from models import user, userWithId
+from typing import List, Optional
+from models import *
 
-DATABASE_FILENAME = "users.csv"
-DELETED_USERS_FILENAME = "users_deleted.csv"
-column_fields = ["id", "name", "mail", "type_skin", "preferences", "date"]
+# Configuración de la base de datos (ajusta los parámetros de conexión según sea necesario)
+DATABASE_URL = "postgresql://udafrfxeywqopsnngsxy:qOpKiLpt06qQF3VFmbiSllPf7J7ZW6@byjnneiuugcgy4m2iqlh-postgresql.services.clever-cloud.com:50013/byjnneiuugcgy4m2iqlh"
+
+Base = declarative_base()
 
 
-def new_user(user: user) -> userWithId:
-    id = get_next_ID()
-    user_with_id = userWithId(id=id, **user.model_dump())
-    write_user_into_csv(user_with_id)
-    return user_with_id
+# Definir el modelo para usuarios eliminados
+class DeletedUser(Base):
+    __tablename__ = 'users_deleted'
 
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    mail = Column(String, nullable=False)
+    type_skin = Column(String, nullable=True)
+    preferences = Column(Boolean, default=False)
+    date = Column(DateTime, default=datetime.utcnow)
+
+
+# Crear la sesión de la base de datos
+engine = create_engine(DATABASE_URL)
+Session = sessionmaker(bind=engine)
+session = Session()
+
+# Crear las tablas en la base de datos (si no existen)
+Base.metadata.create_all(engine)
+
+
+def new_user(name: str, mail: str, type_skin: Optional[str] = None, preferences: Optional[bool] = False) -> User:
+    new_user = User(name=name, mail=mail, type_skin=type_skin, preferences=preferences)
+    session.add(new_user)
+    session.commit()
+    return new_user
 
 
 def get_next_ID() -> int:
-    try:
-        users = read_all_users()
-        if not users:
-            return 1
-        return max(user.id for user in users) + 1
-    except FileNotFoundError:
-        return 1
+    # La base de datos maneja automáticamente el ID de los usuarios, por lo que no es necesario calcularlo manualmente
+    return session.query(User).count() + 1
 
 
-def write_user_into_csv(user: userWithId):
-    with open(DATABASE_FILENAME, mode="a", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=column_fields)
-        writer.writerow(user.model_dump())
+def modify_user_by_name(name: str, user_data: dict) -> Optional[User]:
+    user = session.query(User).filter_by(name=name).first()
+    if user:
+        if 'name' in user_data:
+            user.name = user_data['name']
+        if 'mail' in user_data:
+            user.mail = user_data['mail']
+        if 'type_skin' in user_data:
+            user.type_skin = user_data['type_skin']
+        if 'preferences' in user_data:
+            user.preferences = user_data['preferences']
+        if 'date' in user_data:
+            user.date = datetime.fromisoformat(user_data['date'])
 
-
-def modify_user_by_name(name: str, user_data: dict) -> Optional[userWithId]:
-    users = read_all_users()
-    updated_user = None
-    user_found = False
-
-    for idx, u in enumerate(users):
-        if u.name.lower() == name.lower():
-            if user_data.get("name") is not None:
-                users[idx].name = user_data["name"]
-            if user_data.get("mail") is not None:
-                users[idx].mail = user_data["mail"]
-            if user_data.get("type_skin") is not None:
-                users[idx].type_skin = user_data["type_skin"]
-            if user_data.get("preferences") is not None:
-                users[idx].preferences = user_data["preferences"]
-            if user_data.get("date") is not None:
-                users[idx].date = datetime.fromisoformat(user_data["date"])
-
-            updated_user = users[idx]
-            user_found = True
-            break
-
-    if user_found:
-        with open(DATABASE_FILENAME, mode="w", newline="", encoding="utf-8") as file:
-            writer = csv.DictWriter(file, fieldnames=column_fields)
-            writer.writeheader()
-            for u in users:
-                writer.writerow(u.model_dump())
-        return updated_user
-
+        session.commit()
+        return user
     return None
 
 
-def read_all_users() -> List[userWithId]:
-    users = []
-    try:
-        with open(DATABASE_FILENAME, mode="r", newline="", encoding="utf-8") as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                users.append(userWithId(
-                    id=int(row["id"]),
-                    name=row["name"],
-                    mail=row["mail"],
-                    type_skin=row["type_skin"] if row["type_skin"] else None,
-                    preferences=row["preferences"].lower() == "true",
-                    date=datetime.fromisoformat(row["date"])
-                ))
-    except FileNotFoundError:
-        pass
-    return users
+def read_all_users() -> List[User]:
+    return session.query(User).all()
 
-def remove_user_by_id(id: int) -> Optional[userWithId]:
-    users = read_all_users()
-    deleted_user = None
 
-    # Filtrar los usuarios, dejando fuera el que se va a eliminar
-    remaining_users = []
-
-    for u in users:
-        if u.id == id:
-            deleted_user = u
-        else:
-            remaining_users.append(u)
-
-    # Si el usuario fue encontrado, escribimos en ambos archivos
-    if deleted_user:
-        # Reescribimos el archivo con los usuarios restantes
-        with open("users.csv", mode="w", newline="", encoding="utf-8") as file:
-            writer = csv.DictWriter(file, fieldnames=["id", "name", "mail", "type_skin", "preferences", "date"])
-            writer.writeheader()
-            for u in remaining_users:
-                writer.writerow(u.model_dump())
-
-        # Escribimos el usuario eliminado en el archivo de eliminados
-        with open("users_deleted.csv", mode="a", newline="", encoding="utf-8") as file:
-            writer = csv.DictWriter(file, fieldnames=["id", "name", "mail", "type_skin", "preferences", "date"])
-            # Agregamos encabezado solo si el archivo está vacío
-            file.seek(0, 2)
-            if file.tell() == 0:
-                writer.writeheader()
-            writer.writerow(deleted_user.model_dump())
-
+def remove_user_by_id(id: int) -> Optional[User]:
+    user = session.query(User).filter_by(id=id).first()
+    if user:
+        # Movemos el usuario a la tabla de eliminados
+        deleted_user = DeletedUser(
+            name=user.name,
+            mail=user.mail,
+            type_skin=user.type_skin,
+            preferences=user.preferences,
+            date=user.date
+        )
+        session.delete(user)
+        session.add(deleted_user)
+        session.commit()
         return deleted_user
-
     return None
+

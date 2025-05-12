@@ -1,32 +1,32 @@
 import csv
 from typing import List, Optional
-from models import habit
+from models import Habit
 
 HABITS_FILENAME = "habits.csv"
 habit_fields = ["id", "name", "frequency", "user_id"]
 
 
-def new_habit(habit: habit) -> habit:
+def new_habit(habit: Habit) -> Habit:
     habits = read_all_habits()
     habit_with_id = habit
     write_habit_into_csv(habit_with_id)
     return habit_with_id
 
 
-def write_habit_into_csv(habit: habit):
+def write_habit_into_csv(habit: Habit):
     with open(HABITS_FILENAME, mode="a", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=habit_fields)
         writer.writerow(habit.dict())
 
 
-def modify_habit_by_id(id: int, habit_data: dict) -> Optional[habit]:
+def modify_habit_by_id(id: int, habit_data: dict) -> Optional[Habit]:
     habits = read_all_habits()
     updated_habit = None
 
     for idx, h in enumerate(habits):
         if h.id == id:
             # Crear una nueva instancia del hábito con los datos actualizados
-            updated_habit = habit(
+            updated_habit = Habit(
                 id=h.id,
                 name=habit_data.get("name", h.name),
                 frequency=habit_data.get("frequency", h.frequency),
@@ -48,14 +48,14 @@ def modify_habit_by_id(id: int, habit_data: dict) -> Optional[habit]:
 
 
 
-def read_all_habits() -> List[habit]:
+def read_all_habits() -> List[Habit]:
     habits = []
     try:
         with open(HABITS_FILENAME, mode="r", newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file)
             for row in reader:
                 print(row)  # Para debug
-                habits.append(habit(
+                habits.append(Habit(
                     id=int(row["id"]),
                     name=row["name"],
                     frequency=row["frequency"],
