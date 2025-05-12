@@ -4,6 +4,9 @@ from sqlalchemy import Column, Integer, String, Float
 from enum import Enum as PyEnum
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship
+from typing import Optional
+from pydantic import BaseModel
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -21,6 +24,33 @@ class User(Base):
 
     def __repr__(self):
         return f"<User(id={self.id}, name={self.name}, mail={self.mail})>"
+
+
+
+# Modelo de Pydantic para un usuario con ID
+class UserWithId(BaseModel):
+    id: int
+    name: str
+    mail: str
+    type_skin: Optional[str] = None
+    preferences: bool
+    date: datetime
+
+    class Config:
+        orm_mode = True  # Esto permite convertir los objetos SQLAlchemy en Pydantic models
+
+class UpdatedUser(BaseModel):
+    name: Optional[str]
+    mail: Optional[str]
+    type_skin: Optional[str]
+    preferences: Optional[bool]
+    date: Optional[datetime]
+
+    class Config:
+        orm_mode = True
+
+
+
 
 
 class Habit(Base):

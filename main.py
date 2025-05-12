@@ -10,7 +10,6 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 from fastapi import Depends
-import models
 from habit_operations import *
 from models import *
 from db_operations import *
@@ -23,7 +22,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db_operations import *
 from user_operations import *
 from products_operations import *
-from models import *
 app = FastAPI()
 
 
@@ -40,38 +38,28 @@ async def say_hello(name: str):
     return {"message": f"Hello {name}"}
 
 #user
-#create user
-@app.post("/user", response_model=userWithId)
-async def create_user(user: user):
-    return new_user(user)
+
+# Crear usuario
+@app.post("/user", response_model=UserWithId)
+async def create_user(user: UpdatedUser):
+    new_user_instance = new_user(user.name, user.mail, user.type_skin, user.preferences)
+    return new_user_instance
 
 #update_by_name
-@app.put("/user/by-name/{name}", response_model=userWithId)
+@app.put("/user/by-name/{name}", response_model=UserWithId)
 def update_user_by_name(name: str, user_update: UpdatedUser):
-    updated = modify_user_by_name(
-        name, user_update.model_dump(exclude_unset=True)
-    )
+    updated = modify_user_by_name(name, user_update.dict(exclude_unset=True))  # Usar .dict() para convertir el modelo
     if not updated:
         raise HTTPException(status_code=404, detail="User not found")
     return updated
+
 #show_all_users
-@app.get("/allusers", response_model=List[userWithId])
+@app.get("/allusers", response_model=List[UserWithId])
 async def show_all_users():
     return read_all_users()
 
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request,exc):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "message":"Carambas, algo fallo",
-            "detail":exc.detail,
-            "path":request.url.path
-        },
-    )
-#delete
-@app.delete("/user/{user_id}", response_model=userWithId)
+#delete user
+@app.delete("/user/{user_id}", response_model=UserWithId)
 def delete_user(user_id: int):
     deleted_user = remove_user_by_id(user_id)
 
@@ -79,6 +67,7 @@ def delete_user(user_id: int):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     return deleted_user
+
 
 
 
@@ -117,8 +106,8 @@ def delete_product_view(product_name: str, db: Session = Depends(get_db_session)
 
 
 #habits
-@app.post("/habits/", response_model=habit)
-def create_habit(h: habit):
+@app.post("/habits/", response_model=Habit)
+def create_habit(h: Habit):
     return new_habit(h)
 
 @app.get("/habits/", response_model=list[habit])
@@ -140,3 +129,14 @@ def delete_habit(habit_name: str):
 
 
 
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request,exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "message":"Carambas, algo fallo",
+            "detail":exc.detail,
+            "path":request.url.path
+        },
+    )
