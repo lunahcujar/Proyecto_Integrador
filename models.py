@@ -64,6 +64,27 @@ class Habit(Base):
     user = relationship("User", back_populates="habits")
 
 
+class HabitWithId(BaseModel):
+    id: int
+    name: str
+    frequency: str
+    user_id: int  # ID del usuario al que pertenece el hábito
+
+    class Config:
+        orm_mode = True  # Esto permite convertir objetos SQLAlchemy en modelos Pydantic
+
+class UpdatedHabit(BaseModel):
+    name: Optional[str]
+    frequency: Optional[str]
+    user_id: Optional[int]
+
+    class Config:
+        orm_mode = True
+
+
+
+
+
 class SkinType(PyEnum):
     seca = "seca"
     grasa = "grasa"
