@@ -1,57 +1,45 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float
-from enum import Enum as PyEnum
-from sqlalchemy import Enum as SQLAlchemyEnum
+# models/user.py
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.orm import relationship
-from typing import Optional
-from pydantic import BaseModel
 from datetime import datetime
+from dbconnection import Base
+from sqlalchemy import Column, Integer, String, Float, Enum as SQLAlchemyEnum
+from enum import Enum as PyEnum
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+from pydantic import BaseModel
+from typing import Optional
 
-Base = declarative_base()
+
+
+# Asegúrate que Base venga del archivo central de config
+
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), nullable=False)
-    mail = Column(String(25), nullable=False)
-    type_skin = Column(String(20), nullable=True)
-    preferences = Column(Boolean, nullable=False)
-    date = Column(DateTime, nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    mail = Column(String, nullable=False)
+    type_skin = Column(String, nullable=True)
+    preferences = Column(Boolean, default=False)
+    date = Column(DateTime, default=datetime.utcnow)
 
-    habits = relationship("Habit", back_populates="user")  # Relación con la clase Habit
-
-    def __repr__(self):
-        return f"<User(id={self.id}, name={self.name}, mail={self.mail})>"
+    habits = relationship("Habit", back_populates="user")
 
 
+class DeletedUser(Base):
+    __tablename__ = 'users_deleted'
 
-# Modelo de Pydantic para un usuario con ID
-class UserWithId(BaseModel):
-    id: int
-    name: str
-    mail: str
-    type_skin: Optional[str] = None
-    preferences: bool
-    date: datetime
-
-    class Config:
-        orm_mode = True  # Esto permite convertir los objetos SQLAlchemy en Pydantic models
-
-class UpdatedUser(BaseModel):
-    name: Optional[str]
-    mail: Optional[str]
-    type_skin: Optional[str]
-    preferences: Optional[bool]
-    date: Optional[datetime]
-
-    class Config:
-        orm_mode = True
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    mail = Column(String, nullable=False)
+    type_skin = Column(String, nullable=True)
+    preferences = Column(Boolean, default=False)
+    date = Column(DateTime, default=datetime.utcnow)
 
 
-
-
+# models/habit.py
 
 class Habit(Base):
     __tablename__ = "habits"
@@ -64,26 +52,7 @@ class Habit(Base):
     user = relationship("User", back_populates="habits")
 
 
-class HabitWithId(BaseModel):
-    id: int
-    name: str
-    frequency: str
-    user_id: int  # ID del usuario al que pertenece el hábito
-
-    class Config:
-        orm_mode = True  # Esto permite convertir objetos SQLAlchemy en modelos Pydantic
-
-class UpdatedHabit(BaseModel):
-    name: Optional[str]
-    frequency: Optional[str]
-    user_id: Optional[int]
-
-    class Config:
-        orm_mode = True
-
-
-
-
+# models/product.py
 
 class SkinType(PyEnum):
     seca = "seca"
@@ -103,6 +72,24 @@ class Product(Base):
     skin = Column(SQLAlchemyEnum(SkinType), nullable=False)
     ingredients = Column(String(100), nullable=False)
     price = Column(Float, nullable=False)
+
+
+class HabitWithId(BaseModel):
+    id: int
+    name: str
+    frequency: str
+    user_id: int
+
+    class Config:
+        orm_mode = True
+
+class UpdatedHabit(BaseModel):
+    name: Optional[str]
+    frequency: Optional[str]
+    user_id: Optional[int]
+
+    class Config:
+        from_attributes = True
 
 
 
