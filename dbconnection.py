@@ -1,14 +1,20 @@
 # config/database.py
-from contextlib import asynccontextmanager
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 
-# URL de conexión completa proporcionada por Clever
-DATABASE_URL = "postgresql+asyncpg://udafrfxeywqopsnngsxy:qOpKiLpt06qQF3VFmbiSllPf7J7ZW6@byjnneiuugcgy4m2iqlh-postgresql.services.clever-cloud.com:50013/byjnneiuugcgy4m2iqlh"
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from contextlib import asynccontextmanager
+
+# URL de conexión completa proporcionada por Clever Cloud
+DATABASE_URL = (
+    "postgresql+asyncpg://udafrfxeywqopsnngsxy:qOpKiLpt06qQF3VFmbiSllPf7J7ZW6"
+    "@byjnneiuugcgy4m2iqlh-postgresql.services.clever-cloud.com:50013/byjnneiuugcgy4m2iqlh"
+)
 
 # Crear el motor de conexión asíncrono
 engine = create_async_engine(DATABASE_URL, echo=True)
+
+# Crear la base declarativa
+Base = declarative_base()
 
 # Crear la sesión asíncrona
 AsyncSessionLocal = sessionmaker(
@@ -17,15 +23,11 @@ AsyncSessionLocal = sessionmaker(
     expire_on_commit=False,
 )
 
-# Crear la base declarativa
-Base = declarative_base()
-
-# Context manager para obtener sesión
+# Context manager para obtener sesión asíncrona
 @asynccontextmanager
 async def get_db_session():
     async with AsyncSessionLocal() as session:
-        yield session
-
-# Motor síncrono si es necesario (por si necesitas usarlo en algunas partes de tu código)
-def get_engine():
-    return engine
+        try:
+            yield session
+        finally:
+            await session.close()

@@ -1,37 +1,51 @@
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
+# habit_operations.py
+
 from typing import List, Optional
-from models import Habit, Base
-from user_operations import session
+from sqlalchemy.future import select
+from sqlalchemy import update, delete
+from sqlalchemy.exc import NoResultFound
+from models import Habit
+from dbconnection import get_db_session
 
 
 # Crear un hábito
-def new_habit(name: str, frequency: str, user_id: int) -> Habit:
-    new_habit = Habit(name=name, frequency=frequency, user_id=user_id)
-    session.add(new_habit)
-    session.commit()
-    return new_habit
+async def new_habit(name: str, frequency: str, user_id: int) -> Habit:
+    async with get_db_session() as session:
+        new_habit = Habit(name=name, frequency=frequency, user_id=user_id)
+        session.add(new_habit)
+        await session.commit()
+        await session.refresh(new_habit)
+        return new_habit
+
 
 # Leer todos los hábitos
-def read_all_habits() -> List[Habit]:
-    return session.query(Habit).all()
+async def read_all_habits() -> List[Habit]:
+    async with get_db_session() as session:
+        result = await session.execute(select(Habit))
+        return result.scalars().all()
+
 
 # Modificar un hábito por ID
-def modify_habit_by_id(habit_id: int, updated_data: dict) -> Optional[Habit]:
-    habit = session.query(Habit).filter_by(id=habit_id).first()
-    if habit:
-        for key, value in updated_data.items():
-            setattr(habit, key, value)
-        session.commit()
-        return habit
-    return None
+async def modify_habit_by_id(habit_id: int, updated_data: dict) -> Optional[Habit]:
+    async with get_db_session() as session:
+        result = await session.execute(select(Habit).where(Habit.id == habit_id))
+        habit = result.scalar_one_or_none()
+        if habit:
+            for key, value in updated_data.items():
+                setattr(habit, key, value)
+            await session.commit()
+            await session.refresh(habit)
+            return habit
+        return None
+
 
 # Eliminar un hábito por nombre
-def delete_habit_by_name(habit_name: str) -> Optional[Habit]:
-    habit = session.query(Habit).filter_by(name=habit_name).first()
-    if habit:
-        session.delete(habit)
-        session.commit()
-        return habit
-    return None
+async def delete_habit_by_name(habit_name: str) -> Optional[Habit]:
+    async with get_db_session() as session:
+        result = await session.execute(select(Habit).where(Habit.name == habit_name))
+        habit = result.scalar_one_or_none()
+        if habit:
+            await session.delete(habit)
+            await session.commit()
+            return habit
+        return None

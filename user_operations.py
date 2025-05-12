@@ -3,6 +3,9 @@ from models import User, DeletedUser
 from dbconnection import get_db_session  # Importa el contexto de la sesión asíncrona
 from sqlalchemy.ext.asyncio import AsyncSession
 
+
+
+session = SessionLocal()
 # Crear un nuevo usuario
 async def new_user(name: str, mail: str, type_skin: Optional[str] = None, preferences: Optional[bool] = False) -> User:
     async with get_db_session() as session:  # Usamos el contexto asíncrono
