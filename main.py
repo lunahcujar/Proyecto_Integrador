@@ -106,27 +106,32 @@ def delete_product_view(product_name: str, db: Session = Depends(get_db_session)
 
 
 #habits
-@app.post("/habits/", response_model=Habit)
-def create_habit(h: Habit):
-    return new_habit(h)
+#create habit
+@app.post("/habits/", response_model=HabitWithId)
+def create_habit(h: UpdatedHabit):
+    # Creamos el hábito con los datos proporcionados
+    new_habit_instance = new_habit(h.name, h.frequency, h.user_id)
+    return new_habit_instance
 
-@app.get("/habits/", response_model=list[habit])
+#obtener todos los habitos
+@app.get("/habits/", response_model=list[HabitWithId])
 def get_all_habits():
     return read_all_habits()
 
-@app.put("/habits/{habit_id}", response_model=habit)
+#update by id
+@app.put("/habits/{habit_id}", response_model=HabitWithId)
 def update_habit_by_id(habit_id: int, updated_data: UpdatedHabit):
     updated = modify_habit_by_id(habit_id, updated_data.dict(exclude_unset=True))
     if updated is None:
         raise HTTPException(status_code=404, detail="Habit not found")
     return updated
 
+#delete
 @app.delete("/habits/{habit_name}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_habit(habit_name: str):
     deleted = delete_habit_by_name(habit_name)
     if not deleted:
         raise HTTPException(status_code=404, detail="Habit not found")
-
 
 
 
