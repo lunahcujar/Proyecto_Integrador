@@ -1,58 +1,57 @@
-from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float
+from enum import Enum as PyEnum
 from sqlalchemy import Enum as SQLAlchemyEnum
-from enum import Enum
+from sqlalchemy.orm import relationship
 
-class user(BaseModel):
-    name:str = Field(..., min_length=3, max_length=50)
-    mail:str = Field(...,min_length=3,max_length=25)
-    type_skin:Optional[str]= Field(...)
-    preferences:bool = Field(...)
-    date:datetime
+Base = declarative_base()
 
-class userWithId(user):
-    id: int
+class User(Base):
+    __tablename__ = "users"
 
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), nullable=False)
+    mail = Column(String(25), nullable=False)
+    type_skin = Column(String(20), nullable=True)
+    preferences = Column(Boolean, nullable=False)
+    date = Column(DateTime, nullable=False)
 
-class UpdatedUser(BaseModel):
-    name: Optional[str] = Field(..., min_length=3, max_length=20)
-    mail:Optional[str] = Field(..., min_length=3, max_length=25)
+    habits = relationship("Habit", back_populates="user")  # Relación con la clase Habit
 
-class habit(BaseModel):
-    id:int=Field(...,)
-    name:str = Field(..., min_length=3, max_length=20)
-    frequency:str = Field(...,max_length=25)
-    user_id:int
-
-class UpdatedHabit(BaseModel):
-    name: Optional[str] = Field(None, min_length=3, max_length=20)
-    frequency: Optional[str] = Field(None, max_length=25)
-    user_id: Optional[int] = None
-
-class SkinType(str,Enum):
-    seca="seca"
-    grasa="grasa"
-    sensible="sensible"
-    mixta="mixta"
-    normal="normal"
-    acneica="acneica"
-    madura="madura"
-    todo_tipo="todo_tipo"
+    def __repr__(self):
+        return f"<User(id={self.id}, name={self.name}, mail={self.mail})>"
 
 
-# Modelo Product con el campo skin como Enum
-class Product(BaseModel):
+class Habit(Base):
+    __tablename__ = "habits"
 
-    id :int=Field(...,)
-    name: str=Field(...,min_length=3, max_length=20)
-    skin:SkinType=Field(...)  # Usamos el Enum aquí
-    ingredients:str=Field(...,min_length=3,max_length=100)
-    price:float=Field(...,min_length=3,max_length=100)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(20), nullable=False)
+    frequency = Column(String(25), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"))
+
+    user = relationship("User", back_populates="habits")
 
 
+class SkinType(PyEnum):
+    seca = "seca"
+    grasa = "grasa"
+    sensible = "sensible"
+    mixta = "mixta"
+    normal = "normal"
+    acneica = "acneica"
+    madura = "madura"
+    todo_tipo = "todo_tipo"
 
+class Product(Base):
+    __tablename__ = "products"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(20), nullable=False)
+    skin = Column(SQLAlchemyEnum(SkinType), nullable=False)
+    ingredients = Column(String(100), nullable=False)
+    price = Column(Float, nullable=False)
 
 
 
