@@ -26,6 +26,9 @@ from products_operations import *
 from models import *
 app = FastAPI()
 
+
+#bnuevos cambios
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
