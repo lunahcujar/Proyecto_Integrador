@@ -1,16 +1,17 @@
-import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
+from models import Base  # Asegúrate de usar el nombre correcto del archivo que contiene tus clases Base, User, etc.
 
-from models import Base  # O el nombre correcto del archivo que contiene tus clases Base, User, etc.
+DATABASE_URL = "postgresql+asyncpg://uocli0titobcsftfloev:ONxwy7h8aKuybHt7a5F05jNdwGVnzd@bxrra2fip4pfogffonc8-postgresql.services.clever-cloud.com:50013/bxrra2fip4pfogffonc8"
 
-DATABASE_URL = "postgresql+asyncpg://udafrfxeywqopsnngsxy:qOpKiLpt06qQF3VFmbiSllPf7J7ZW6@byjnneiuugcgy4m2iqlh-postgresql.services.clever-cloud.com:50013/byjnneiuugcgy4m2iqlh"
 
-engine = create_async_engine(DATABASE_URL, echo=True)
+# Crear el motor de conexión asincrónica
+engine = create_async_engine(DATABASE_URL, echo=True, pool_size=2, max_overflow=0)
 
+# Función asincrónica para crear las tablas
 async def create_tables():
     async with engine.begin() as conn:
+        # Crear las tablas en la base de datos
         await conn.run_sync(Base.metadata.create_all)
+    # Asegúrate de liberar las conexiones
     await engine.dispose()
 
-if __name__ == "__main__":
-    asyncio.run(create_tables())

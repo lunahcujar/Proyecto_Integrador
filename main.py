@@ -15,28 +15,29 @@ from models import *
 from db_operations import *
 from typing import List
 from contextlib import asynccontextmanager
-from database import Base
+from products import Base
 from dbconnection import AsyncSessionLocal, get_db
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 from db_operations import *
 from user_operations import *
 from products_operations import *
+from create_tables import  *
 app = FastAPI()
 
 
 #bnuevos cambios
 #nueos cambiossss
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
 @app.on_event("startup")
-async def on_startup():
-    await init_models()
+async def startup():
+    # Crear las tablas cuando la aplicación inicie
+    await create_tables()
 
-
+# Aquí van tus rutas y otras configuraciones de FastAPI
+@app.get("/")
+async def read_root():
+    return {"message": "Hello World!"}
 @app.get("/hello/{name}")
 async def say_hello(name: str):
     return {"message": f"Hello {name}"}
