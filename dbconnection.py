@@ -1,8 +1,6 @@
-# config/database.py
-
+from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from contextlib import asynccontextmanager
 
 # URL de conexión completa proporcionada por Clever Cloud
 DATABASE_URL = (
@@ -23,11 +21,7 @@ AsyncSessionLocal = sessionmaker(
     expire_on_commit=False,
 )
 
-# Context manager para obtener sesión asíncrona
-@asynccontextmanager
-async def get_db_session():
+# Dependency que se inyecta con Depends()
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+        yield session

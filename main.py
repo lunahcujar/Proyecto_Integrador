@@ -16,7 +16,7 @@ from db_operations import *
 from typing import List
 from contextlib import asynccontextmanager
 from database import Base
-from dbconnection import AsyncSessionLocal, get_db_session
+from dbconnection import AsyncSessionLocal, get_db
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 from db_operations import *
@@ -32,6 +32,10 @@ app = FastAPI()
 async def root():
     return {"message": "Hello World"}
 
+@app.on_event("startup")
+async def on_startup():
+    await init_models()
+
 
 @app.get("/hello/{name}")
 async def say_hello(name: str):
@@ -40,9 +44,15 @@ async def say_hello(name: str):
 #user
 
 # Crear usuario
+
 @app.post("/user", response_model=UserWithId)
-async def create_user(user: UpdatedUser, db: AsyncSession = Depends(get_db_session)):
-    return await new_user(user.name, user.mail, user.type_skin, user.preferences, db)
+async def create_user(user: UpdatedUser, db: AsyncSession = Depends(get_db)):
+    try:
+        new_user_instance = await new_user(user.name, user.mail, user.type_skin, user.preferences, db)
+        return new_user_instance
+    except Exception as e:
+        print(f"❌ Error al crear usuario: {e}")
+        raise HTTPException(status_code=500, detail="Error interno al crear usuario")
 
 
 #update_by_name
@@ -50,7 +60,7 @@ async def create_user(user: UpdatedUser, db: AsyncSession = Depends(get_db_sessi
 async def update_user_by_name(
     name: str,
     user_update: UpdatedUser,
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db)
 ):
     updated = await modify_user_by_name(name, user_update.dict(exclude_unset=True), db)
     if not updated:
@@ -59,12 +69,11 @@ async def update_user_by_name(
 
 #show_all_users
 @app.get("/allusers", response_model=List[UserWithId])
-async def show_all_users(db: AsyncSession = Depends(get_db_session)):
+async def show_all_users(db: AsyncSession = Depends(get_db)):
     return await read_all_users(db)
 
-#delete user
 @app.delete("/user/{user_id}", response_model=UserWithId)
-async def delete_user(user_id: int, db: AsyncSession = Depends(get_db_session)):
+async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
     deleted_user = await remove_user_by_id(user_id, db)
     if not deleted_user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
@@ -114,6 +123,19 @@ def create_habit(h: UpdatedHabit):
     # Creamos el hábito con los datos proporcionados
     new_habit_instance = new_habit(h.name, h.frequency, h.user_id)
     return new_habit_instance
+
+#obtener todos los habitos
+@app.get("/habits/", response_model=list[HabitWithId])
+def get_all_habits():
+    return read_all_habits()
+
+#update by id
+@app.put("/habits/{habit_id}", response_model=HabitWithId)
+def update_habit_by_id(habit_id: int, updated_data: UpdatedHabit):
+    updated = modify_habit_by_id(habit_id, updated_data.dict(exclude_unset=True))
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    return updated
 
 #obtener todos los habitos
 @app.get("/habits/", response_model=list[HabitWithId])

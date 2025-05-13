@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from sqlalchemy import update, delete
 from sqlalchemy.exc import NoResultFound
 from models import Habit
-from dbconnection import get_db_session
+from dbconnection import get_db
 
 
 # Crear un hábito
