@@ -7,23 +7,13 @@ from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
 from dbconnection import Base, engine
+from models import SkinType
 
 
 # Inicialización de la base de datos
 async def init_models():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-
-# Enum para los tipos de piel
-class SkinType(str, Enum):
-    seca = "seca"
-    grasa = "grasa"
-    sensible = "sensible"
-    mixta = "mixta"
-    normal = "normal"
-    acneica = "acneica"
-    madura = "madura"
-    todo_tipo = "todo_tipo"
 
 # Modelo para el Producto
 class Product(Base):
@@ -67,11 +57,3 @@ class ProductWithId(UpdatedProduct):
 
     class Config:
         orm_mode = True
-
-CREATE TABLE productos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL,
-    descripcion TEXT,
-    precio REAL,
-    stock INTEGER
-);
