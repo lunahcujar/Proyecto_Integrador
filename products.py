@@ -1,21 +1,18 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, Enum as SQLAlchemyEnum
+from sqlalchemy import Column, Integer, String, Float, Enum as SQLAlchemyEnum
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from datetime import datetime
-from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column
 from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
 from dbconnection import Base, engine
 from models import SkinType
 
-
 # Inicialización de la base de datos
 async def init_models():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-# Modelo para el Producto
+# Modelo para el Producto (SQLAlchemy)
 class Product(Base):
     __tablename__ = "products"
 
@@ -27,7 +24,6 @@ class Product(Base):
     price: Mapped[float] = mapped_column(Float, nullable=True)  # Precio del producto
 
 # Modelos Pydantic para validaciones y transferencias de datos
-
 class ProductCreate(BaseModel):
     name: str
     skin: Optional[SkinType] = None
@@ -44,16 +40,10 @@ class ProductWithId(ProductCreate):
         orm_mode = True
 
 class UpdatedProduct(BaseModel):
-    name: Optional[str]  # Estos campos son opcionales para la actualización
+    name: Optional[str]
     skin: Optional[SkinType] = None
     ingredients: Optional[str]
     price: Optional[float]
-
-    class Config:
-        orm_mode = True
-
-class ProductWithId(UpdatedProduct):
-    id: int
 
     class Config:
         orm_mode = True

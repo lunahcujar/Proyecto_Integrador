@@ -40,4 +40,4 @@ async def migrate_from_csv(csv_path):
     print("✅ Migración desde CSV completada exitosamente.")
 
 if __name__ == "__main__":
-    asyncio.run(migrate_from_csv("productos.csv"))
+    asyncio.run(migrate_from_csv("products.csv"))
