@@ -122,31 +122,41 @@ def delete_product_view(product_name: str, db: Session = Depends(get_db_session)
 @app.post("/habits/", response_model=HabitWithId)
 async def create_habit(habit: UpdatedHabit, db: AsyncSession = Depends(get_db)):
     try:
-        new_habit_instance = await new_habit(habit.name, habit.frequency, habit.user_id)
-        return new_habit_instance()
+        new_habit_instance = await new_habit(habit.name, habit.frequency, habit.user_id, db)
+        return new_habit_instance  # ✅ sin paréntesis
     except Exception as e:
         print(f"❌ Error al crear habito: {e}")
         raise HTTPException(status_code=500, detail="Error interno al crear habito")
 
+
 # Obtener todos los hábitos
 @app.get("/habits/", response_model=list[HabitWithId])
-async def get_all_habits():
-    return await read_all_habits()
+async def get_all_habits(db: AsyncSession = Depends(get_db)):
+    return await read_all_habits(db)
 
 # Actualizar hábito por ID
 @app.put("/habits/{habit_id}", response_model=HabitWithId)
-async def update_habit_by_id(habit_id: int, updated_data: UpdatedHabit):
-    updated = await modify_habit_by_id(habit_id, updated_data.dict(exclude_unset=True))
-    if updated is None:
-        raise HTTPException(status_code=404, detail="Habit not found")
-    return updated
+async def update_habit_by_id(habit_id: int, updated_data: UpdatedHabit, db: AsyncSession = Depends(get_db)):
+    try:
+        updated = await modify_habit_by_id(habit_id, updated_data.dict(exclude_unset=True), db)
+        return updated
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        print(f"❌ Error al actualizar hábito: {e}")
+        raise HTTPException(status_code=500, detail="Error interno al actualizar hábito")
 
 # Eliminar hábito por nombre
-@app.delete("/habits/{habit_name}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_habit(habit_name: str):
-    deleted = await delete_habit_by_name(habit_name)
-    if not deleted:
-        raise HTTPException(status_code=404, detail="Habit not found")
+@app.delete("/habits/{habit_name}", response_model=HabitWithId)
+async def remove_habit(habit_name: str, db: AsyncSession = Depends(get_db)):
+    try:
+        deleted = await delete_habit_by_name(habit_name, db)
+        if deleted:
+            return deleted
+        raise HTTPException(status_code=404, detail="Hábito no encontrado")
+    except Exception as e:
+        print(f"❌ Error al eliminar hábito: {e}")
+        raise HTTPException(status_code=500, detail="Error interno al eliminar hábito")
 
 
 
