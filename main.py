@@ -23,6 +23,7 @@ from db_operations import *
 from user_operations import *
 from products_operations import *
 from create_tables import  *
+from products import *
 app = FastAPI()
 
 
@@ -80,42 +81,45 @@ async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return deleted_user
 
-
-
-
+"""""
 #products
 
-"""
-@app.post("/products/", response_model=Product)
-async def create_product_view(p: Product, db: AsyncSession = Depends(get_db_session)):
-    # Aquí deberías agregar la lógica para crear el producto en la base de datos
-    return await create_product(db=db, p=p)  # Asumiendo que tienes la función create_product
 
-@app.get("/products/", response_model=list[Product])
-def get_all_products_view(db: Session = Depends(get_db_session)):
-    return get_all_products(db=db)
+# Endpoint para crear un producto
+@app.post("/products/", response_model=ProductWithId)
+async def create_product_view(p: ProductCreate, db: AsyncSession = Depends(get_db)):
+    db_product = await create_product(db=db, p=p)
+    return db_product
 
-@app.get("/products/{product_name}", response_model=Product)
-def get_product_by_name_view(product_name: str, db: Session = Depends(get_db_session)):
-    product = get_product_by_name(db=db, product_name=product_name)
+# Endpoint para obtener todos los productos
+@app.get("/products/", response_model=list[ProductWithId])
+async def get_all_products_view(db: AsyncSession = Depends(get_db)):
+    return await get_all_products(db=db)
+
+# Endpoint para obtener un producto por nombre
+@app.get("/products/{product_name}", response_model=ProductWithId)
+async def get_product_by_name_view(product_name: str, db: AsyncSession = Depends(get_db)):
+    product = await get_product_by_name(db=db, product_name=product_name)
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
-@app.put("/products/{product_name}", response_model=Product)
-def update_product_view(product_name: str, updated_data: Product, db: Session = Depends(get_db_session())):
-    updated = update_product(db=db, product_name=product_name, updated_data=updated_data.dict())
+# Endpoint para actualizar un producto
+@app.put("/products/{product_name}", response_model=ProductWithId)
+async def update_product_view(product_name: str, updated_data: UpdatedProduct, db: AsyncSession = Depends(get_db)):
+    updated = await update_product(db=db, product_name=product_name, updated_data=updated_data.dict())
     if updated is None:
         raise HTTPException(status_code=404, detail="Product not found")
     return updated
-@app.delete("/products/{product_name}", response_model=Product)
-def delete_product_view(product_name: str, db: Session = Depends(get_db_session)):
-    deleted = delete_product(db=db, product_name=product_name)
+
+# Endpoint para eliminar un producto
+@app.delete("/products/{product_name}", response_model=ProductWithId)
+async def delete_product_view(product_name: str, db: AsyncSession = Depends(get_db)):
+    deleted = await delete_product(db=db, product_name=product_name)
     if deleted is None:
         raise HTTPException(status_code=404, detail="Product not found")
     return deleted
 """
-
 
 #habits
 #create habit
