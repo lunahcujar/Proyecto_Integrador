@@ -1,0 +1,37 @@
+<{% extends 'base.html' %}
+{% block title %} {{ titulo }} - Visualizando {% endblock %}
+{% block content %}
+<h3>Info de las sesiones</h3>
+
+<h6>Aqui tenemos mas info</h6>
+
+<a type="button" href="/"> Regresar</a> <br>
+<a type="button" href="/add"> Adicionar Sesión</a>
+
+<table style="color: aqua">
+
+    <tr>
+        <th>Tema</th>
+        <th>Fecha</th>
+        <th>Hora</th>
+        <th>Mentor</th>
+        <th>Enlace</th>
+    </tr>
+    <tbody>
+    {% for sesion in sesiones %}
+    <tr>
+        <td>{{ sesion.Tema }}</td>
+        <td>{{ sesion.Fecha }}</td>
+        <td>{{ sesion.Hora }}</td>
+        <td style="color: chocolate">  {{ sesion.Mentor }}</td>
+        <td> <a href="{{ sesion.Enlace }}">Ver Grabación</a></td>
+        <td><a href="/detail/{{ loop.index0 }}">Ver detalle</a></td>
+
+    </tr>
+    {% endfor %}
+    </tbody>
+
+
+</table>
+
+{% endblock %}

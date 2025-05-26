@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %} Inicio - Visualizando {% endblock %}
+{% block content %}
+
+<h1>Hola Mundo desde FastAPI</h1>
+<h1>{{title}}</h1>
+<h2>Este es un ejemplo de subtítulo</h2>
+<h3>Otro subtítulo</h3>
+<h4 style="color: blue">{{name}}</h4>
+<p>Este es un párrafo simple explicando que estamos aprendiendo FastAPI con plantillas HTML.</p>
+
+<ul>
+
+    <li>Primer elemento</li>
+    <li>Segundo elemento</li>
+</ul>
+
+
+<img src="../static/img/cometa.png" width="300" height="500">
+<br>
+<a href="/info">Vamos a ver mas info</a>
+<br>
+<a href="https://sigmotoa.com">Esto es un enlace</a>
+
+
+{% endblock %}
