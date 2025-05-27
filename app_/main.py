@@ -1,3 +1,4 @@
+import app
 from fastapi import FastAPI
 from fastapi import HTTPException
 from fastapi.params import Depends
@@ -24,6 +25,12 @@ from user_operations import *
 from products_operations import *
 from create_tables import  *
 from products import *
+
+
+from app_.templates.routes import *
+app.include_router(router)
+
+
 app = FastAPI()
 
 
@@ -86,18 +93,18 @@ async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
 
 
 # Endpoint para crear un producto
-@app.post("/products/", response_model=ProductWithId)
+@app_.post("/products/", response_model=ProductWithId)
 async def create_product_view(p: ProductCreate, db: AsyncSession = Depends(get_db)):
     db_product = await create_product(db=db, p=p)
     return db_product
 
 # Endpoint para obtener todos los productos
-@app.get("/products/", response_model=list[ProductWithId])
+@app_.get("/products/", response_model=list[ProductWithId])
 async def get_all_products_view(db: AsyncSession = Depends(get_db)):
     return await get_all_products(db=db)
 
 # Endpoint para obtener un producto por nombre
-@app.get("/products/{product_name}", response_model=ProductWithId)
+@app_.get("/products/{product_name}", response_model=ProductWithId)
 async def get_product_by_name_view(product_name: str, db: AsyncSession = Depends(get_db)):
     product = await get_product_by_name(db=db, product_name=product_name)
     if product is None:
@@ -105,7 +112,7 @@ async def get_product_by_name_view(product_name: str, db: AsyncSession = Depends
     return product
 
 # Endpoint para actualizar un producto
-@app.put("/products/{product_name}", response_model=ProductWithId)
+@app_.put("/products/{product_name}", response_model=ProductWithId)
 async def update_product_view(product_name: str, updated_data: UpdatedProduct, db: AsyncSession = Depends(get_db)):
     updated = await update_product(db=db, product_name=product_name, updated_data=updated_data.dict())
     if updated is None:
@@ -113,7 +120,7 @@ async def update_product_view(product_name: str, updated_data: UpdatedProduct, d
     return updated
 
 # Endpoint para eliminar un producto
-@app.delete("/products/{product_name}", response_model=ProductWithId)
+@app_.delete("/products/{product_name}", response_model=ProductWithId)
 async def delete_product_view(product_name: str, db: AsyncSession = Depends(get_db)):
     deleted = await delete_product(db=db, product_name=product_name)
     if deleted is None:

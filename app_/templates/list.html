@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Lista - {{ nombre_modelo }}{% endblock %}
+{% block content %}
+<h2>Lista de {{ nombre_modelo }}s</h2>
+<a href="/{{ nombre_modelo|lower }}/add">➕ Agregar {{ nombre_modelo }}</a><br><br>
+
+<table border="1">
+    <thead>
+    <tr>
+        {% for campo in campos %}
+            <th>{{ campo|capitalize }}</th>
+        {% endfor %}
+        <th>Acciones</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for item in datos %}
+    <tr>
+        {% for campo in campos %}
+            <td>{{ item[campo] }}</td>
+        {% endfor %}
+        <td><a href="/{{ nombre_modelo|lower }}/{{ loop.index0 }}">Ver detalle</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
