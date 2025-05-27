@@ -4,8 +4,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
-from dbconnection import Base, engine
-from models import SkinType
+from app_.dbconnection import Base, engine
+from app_.models import SkinType
 
 # Inicialización de la base de datos
 async def init_models():

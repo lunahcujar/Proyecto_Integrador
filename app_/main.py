@@ -16,22 +16,22 @@ from app_.models import *
 from app_.db_operations import *
 from typing import List
 from contextlib import asynccontextmanager
-from products import Base
-from dbconnection import AsyncSessionLocal, get_db
+from app_.products import Base
+from app_.dbconnection import AsyncSessionLocal, get_db
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
-from db_operations import *
-from user_operations import *
-from products_operations import *
-from create_tables import  *
-from products import *
+from app_.db_operations import *
+from app_.user_operations import *
+from app_.products_operations import *
+from app_.create_tables import  *
+from app_.products import *
 
 
-from app_.templates.routes import *
-app.include_router(router)
-
+from app_.templates.routes import router
 
 app = FastAPI()
+app.include_router(router)
+
 
 
 #bnuevos cambios

@@ -4,13 +4,20 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import pandas as pd
 
-templates = Jinja2Templates(directory="templates")
+from fastapi import APIRouter
+from fastapi.templating import Jinja2Templates
+
 router = APIRouter()
+templates = Jinja2Templates(directory="templates")
+
+@router.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 csv_files = {
-    "Usuario": "data/usuarios.csv",
-    "Producto": "data/productos.csv",
-    "Habito": "data/habitos.csv"
+    "Usuario": "app_/usuarios.csv",
+    "Producto": "app_/productos.csv",
+    "Habito": "app_/habitos.csv"
 }
 
 campos_modelos = {

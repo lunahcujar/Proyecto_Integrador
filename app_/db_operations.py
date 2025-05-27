@@ -2,7 +2,7 @@ import pandas as pd
 import sqlite3
 
 # Ruta del archivo CSV generado
-file_path = "products.csv"  # Asegúrate de que esté en la misma carpeta del proyecto o ajusta la ruta
+file_path = "app_/products.csv"  # Asegúrate de que esté en la misma carpeta del proyecto o ajusta la ruta
 
 # Cargar CSV
 df = pd.read_csv(file_path)

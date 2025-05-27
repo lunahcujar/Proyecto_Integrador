@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from products import Product
+from app_.products import Product
 
 async def create_product(db: AsyncSession, p: Product):
     db_product = Product(name=p.name, skin=p.skin, ingredients=p.ingredients, price=p.price)

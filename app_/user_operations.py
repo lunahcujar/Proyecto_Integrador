@@ -1,6 +1,6 @@
 from typing import List, Optional
-from models import User
-from dbconnection import get_db  # Importa el contexto de la sesión asíncrona
+from app_.models import User
+from app_.dbconnection import get_db  # Importa el contexto de la sesión asíncrona
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 

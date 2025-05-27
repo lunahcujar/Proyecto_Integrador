@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import create_async_engine
-from models import Base  # Asegúrate de usar el nombre correcto del archivo que contiene tus clases Base, User, etc.
+from app_.models import Base  # Asegúrate de usar el nombre correcto del archivo que contiene tus clases Base, User, etc.
 
 DATABASE_URL = "postgresql+asyncpg://uocli0titobcsftfloev:ONxwy7h8aKuybHt7a5F05jNdwGVnzd@bxrra2fip4pfogffonc8-postgresql.services.clever-cloud.com:50013/bxrra2fip4pfogffonc8"
 
