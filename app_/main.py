@@ -11,6 +11,8 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 from fastapi import Depends
+from starlette.staticfiles import StaticFiles
+
 from app_.habit_operations import *
 from app_.models import *
 from app_.db_operations import *
@@ -29,8 +31,13 @@ from app_.products import *
 
 from app_.templates.routes import router
 
-app = FastAPI()
+# Montar carpeta estática
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Incluir las rutas
 app.include_router(router)
+
+
 
 
 
