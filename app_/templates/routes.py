@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 import pandas as pd
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="app_/templates")
 
 # Página principal
 @router.get("/", response_class=HTMLResponse)

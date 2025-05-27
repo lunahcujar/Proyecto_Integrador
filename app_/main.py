@@ -28,11 +28,15 @@ from app_.products_operations import *
 from app_.create_tables import  *
 from app_.products import *
 
-
+from fastapi.staticfiles import StaticFiles
 from app_.templates.routes import router
+
+
+app = FastAPI()
 
 # Montar carpeta estática
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 # Incluir las rutas
 app.include_router(router)
