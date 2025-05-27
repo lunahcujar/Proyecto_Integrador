@@ -1,17 +1,22 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-
     <meta charset="UTF-8">
-    <title >{% block title %} - Visualizando {% endblock %}</title>
-
+    <title>{% block title %}Mi App FastAPI{% endblock %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        nav a { margin: 0 15px; text-decoration: none; color: #333; }
+        nav a:hover { text-decoration: underline; }
+    </style>
 </head>
-<body style="color: red">
-{% include 'includes/navbar.html' %}
-
-<main>
+<body>
+    <nav>
+        <a href="/">Inicio</a>
+        <a href="/productos">Ver productos</a>
+        <a href="/habitos">Añadir hábitos</a>
+        <a href="/formulario">Registrar producto</a>
+    </nav>
+    <hr>
     {% block content %}{% endblock %}
-</main>
- {% include 'includes/footer.html' %}
 </body>
 </html>

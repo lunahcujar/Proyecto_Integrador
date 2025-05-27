@@ -1,26 +1,93 @@
 {% extends 'base.html' %}
-{% block title %} Inicio - Visualizando {% endblock %}
+
+{% block title %}Inicio - Visualizando CO₂{% endblock %}
+
 {% block content %}
+<style>
+    .hero {
+        background: linear-gradient(to right, #56ccf2, #2f80ed);
+        color: white;
+        padding: 40px 20px;
+        border-radius: 12px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
 
-<h1>Hola Mundo desde FastAPI</h1>
-<h1>{{title}}</h1>
-<h2>Este es un ejemplo de subtítulo</h2>
-<h3>Otro subtítulo</h3>
-<h4 style="color: blue">{{name}}</h4>
-<p>Este es un párrafo simple explicando que estamos aprendiendo FastAPI con plantillas HTML.</p>
+    .hero h1 {
+        font-size: 3em;
+        margin-bottom: 10px;
+    }
 
-<ul>
+    .hero p {
+        font-size: 1.2em;
+    }
 
-    <li>Primer elemento</li>
-    <li>Segundo elemento</li>
-</ul>
+    .features {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        margin-top: 20px;
+    }
 
+    .card {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 20px;
+        width: 300px;
+        margin: 10px;
+        text-align: center;
+        box-shadow: 0px 4px 8px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+    }
 
-<img src="../static/img/cometa.png" width="300" height="500">
-<br>
-<a href="/info">Vamos a ver mas info</a>
-<br>
-<a href="https://sigmotoa.com">Esto es un enlace</a>
+    .card:hover {
+        transform: scale(1.05);
+    }
 
+    .card h3 {
+        margin-bottom: 10px;
+    }
 
+    .card a {
+        text-decoration: none;
+        color: #2f80ed;
+        font-weight: bold;
+    }
+
+    .cometa {
+        display: block;
+        margin: 30px auto;
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+    }
+</style>
+
+<div class="hero">
+    <h1>Bienvenido a Visualizando CO₂</h1>
+    <p>Explora, analiza y gestiona tus hábitos y productos de manera sostenible.</p>
+</div>
+
+<div class="features">
+    <div class="card">
+        <h3>Ver Productos</h3>
+        <p>Consulta los productos recomendados según tu tipo de piel y estilo de vida.</p>
+        <a href="/productos">Ir a productos →</a>
+    </div>
+
+    <div class="card">
+        <h3>Registrar Hábitos</h3>
+        <p>Agrega tus hábitos diarios para obtener recomendaciones personalizadas.</p>
+        <a href="/habitos">Registrar hábitos →</a>
+    </div>
+
+    <div class="card">
+        <h3>Añadir Producto</h3>
+        <p>Sube un nuevo producto al sistema si tienes uno nuevo que recomendar.</p>
+        <a href="/formulario">Añadir producto →</a>
+    </div>
+</div>
+
+<img src="/static/img/tipos-de-pieles-scaled.jpeg" class="cometa" alt="Imagen de cometa decorativa">
 {% endblock %}
