@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
 
-from dbconnection import Base, engine
+from app_.dbconnection import Base, engine
 
 # Inicialización de la base de datos
 async def init_models():

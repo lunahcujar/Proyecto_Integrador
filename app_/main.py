@@ -11,9 +11,9 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 from fastapi import Depends
-from habit_operations import *
-from models import *
-from db_operations import *
+from app_.habit_operations import *
+from app_.models import *
+from app_.db_operations import *
 from typing import List
 from contextlib import asynccontextmanager
 from products import Base

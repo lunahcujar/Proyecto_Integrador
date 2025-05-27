@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
 from sqlalchemy.exc import NoResultFound
-from models import Habit
-from dbconnection import get_db
+from app_.models import Habit
+from app_.dbconnection import get_db
 
 
 async def new_habit(name: str, frequency: str, user_id: int, db: AsyncSession) -> Habit:
