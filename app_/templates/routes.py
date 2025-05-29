@@ -1,8 +1,13 @@
 # routes.py
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import pandas as pd
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app_.dbconnection import get_db
+from app_.products import Product
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app_/templates")
@@ -25,6 +30,33 @@ campos_modelos = {
     "Producto": ["name", "description", "type_skin"],
     "Habito": ["name", "frequency", "user_id"]
 }
+
+#catalogo (list)
+
+@router.get("/productos", response_class=HTMLResponse)
+async def mostrar_catalogo(request: Request, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Product))
+    productos = result.scalars().all()
+
+    lista = [
+        {
+            "id": p.id,
+            "name": p.name,
+            "url": p.url,
+            "type": p.type,
+            "ingredients": p.ingredients,
+            "price": p.price
+        }
+        for p in productos
+    ]
+
+    return templates.TemplateResponse("list.html", {
+        "request": request,
+        "nombre_modelo": "Producto",
+        "items": lista
+    })
+
+
 
 # Listar elementos
 @router.get("/{modelo}s", response_class=HTMLResponse)

@@ -16,22 +16,23 @@ async def init_models():
 class Product(Base):
     __tablename__ = "products"
 
-    # Definir los atributos de la tabla
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)  # Nombre del producto
-    skin: Mapped[SkinType] = mapped_column(SQLAlchemyEnum(SkinType), nullable=True)  # Tipo de piel
-    ingredients: Mapped[str] = mapped_column(String(255), nullable=True)  # Ingredientes del producto
-    price: Mapped[float] = mapped_column(Float, nullable=True)  # Precio del producto
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    url = Column(String, nullable=False)
+    type = Column(String, nullable=False)
+    ingredients = Column(String, nullable=False)
+    price = Column(Float, nullable=False)
 
 # Modelos Pydantic para validaciones y transferencias de datos
 class ProductCreate(BaseModel):
     name: str
-    skin: Optional[SkinType] = None
+    url: Optional[str] = None
+    type: Optional[str] = None
     ingredients: Optional[str] = None
     price: Optional[float] = None
 
     class Config:
-        orm_mode = True  # Esto permite que SQLAlchemy se use directamente en los modelos Pydantic
+        orm_mode = True
 
 class ProductWithId(ProductCreate):
     id: int
@@ -41,7 +42,8 @@ class ProductWithId(ProductCreate):
 
 class UpdatedProduct(BaseModel):
     name: Optional[str]
-    skin: Optional[SkinType] = None
+    url: Optional[str] = None
+    type: Optional[str] = None
     ingredients: Optional[str]
     price: Optional[float]
 

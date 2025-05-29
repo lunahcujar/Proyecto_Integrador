@@ -1,27 +1,54 @@
 {% extends 'base.html' %}
-{% block title %}Lista - {{ nombre_modelo }}{% endblock %}
-{% block content %}
-<h2>Lista de {{ nombre_modelo }}s</h2>
-<a href="/{{ nombre_modelo|lower }}/add">➕ Agregar {{ nombre_modelo }}</a><br><br>
 
-<table border="1">
-    <thead>
-    <tr>
-        {% for campo in campos %}
-            <th>{{ campo|capitalize }}</th>
-        {% endfor %}
-        <th>Acciones</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for item in datos %}
-    <tr>
-        {% for campo in campos %}
-            <td>{{ item[campo] }}</td>
-        {% endfor %}
-        <td><a href="/{{ nombre_modelo|lower }}/{{ loop.index0 }}">Ver detalle</a></td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+{% block title %}Catálogo de Skincare{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f6f6f6;
+    }
+    .catalog {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 2rem;
+        justify-content: center;
+    }
+    .card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        width: 250px;
+        padding: 1rem;
+        text-align: center;
+    }
+    .card img {
+        max-width: 100%;
+        border-radius: 6px;
+        height: 200px;
+        object-fit: cover;
+    }
+    .card h3 {
+        font-size: 1.1rem;
+        margin: 0.5rem 0;
+    }
+    .card p {
+        font-size: 0.9rem;
+        margin: 0.2rem 0;
+    }
+</style>
+
+<h1 style="text-align:center;">🌿 Catálogo Skincare 🌿</h1>
+<div class="catalog">
+  {% for p in items %}
+    <div class="card">
+      <img src="{{ p.url }}" alt="{{ p.name }}">
+      <h3>{{ p.name }}</h3>
+      <p><strong>Tipo:</strong> {{ p.type }}</p>
+      <p><strong>Ingredientes:</strong> {{ p.ingredients }}</p>
+      <p><strong>Precio:</strong> ${{ "%.2f"|format(p.price) }}</p>
+    </div>
+  {% endfor %}
+</div>
 {% endblock %}
