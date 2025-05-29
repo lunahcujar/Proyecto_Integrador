@@ -6,7 +6,7 @@ from products import Product  # tu modelo SQLAlchemy
 from models import Base
 
 # URL de PostgreSQL (ajústala si la cambias)
-POSTGRES_URL = "postgresql+asyncpg://uocli0titobcsftfloev:ONxwy7h8aKuybHt7a5F05jNdwGVnzd@bxrra2fip4pfogffonc8-postgresql.services.clever-cloud.com:50013/bxrra2fip4pfogffonc8"
+POSTGRES_URL = "postgresql://uwwaoyysz9b8uw8oryhz:lF9ljHVTelf8mU2ST8glvH3E7SaZUK@bmx3ykywpgi0a3ffcvnm-postgresql.services.clever-cloud.com:50013/bmx3ykywpgi0a3ffcvnm"
 
 # Crear engine y sesión
 pg_engine = create_async_engine(POSTGRES_URL, echo=True)
@@ -40,4 +40,4 @@ async def migrate_from_csv(csv_path):
     print("✅ Migración desde CSV completada exitosamente.")
 
 if __name__ == "__main__":
-    asyncio.run(migrate_from_csv("products.csv"))
+    asyncio.run(migrate_from_csv("skincare_products.csv"))
