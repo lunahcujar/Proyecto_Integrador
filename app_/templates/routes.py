@@ -17,33 +17,31 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app_/templates")
 
 
-@router.get("/add_user", response_class=HTMLResponse)
-async def show_form(request: Request):
+# registrar_usuario.py
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app_.models import User, UserCreate
+from app_.dbconnection import get_db
+
+
+@router.post("/api/usuarios")
+async def registrar_usuario(usuario: UserCreate, db: AsyncSession = Depends(get_db)):
+    nuevo_usuario = User(
+        name=usuario.name,
+        mail=usuario.mail,
+        type_skin=usuario.type_skin,
+        preferences=usuario.preferences or False
+    )
+    db.add(nuevo_usuario)
+    await db.commit()  # importante: await aquí
+    return {"mensaje": "Usuario registrado"}
+
+@router.get("/registro", response_class=HTMLResponse)
+async def mostrar_formulario_registro(request: Request):
     return templates.TemplateResponse("users.html", {"request": request})
 
 
-class SessionLocal:
-    pass
-
-
-@router.post("/registrar_usuario")
-async def register_user(
-    name: str = Form(...),
-    mail: str = Form(...),
-    type_skin: SkinType = Form(...),
-    preferences: bool = Form(False)
-):
-    db: Session = SessionLocal()
-    nuevo_usuario = User(
-        name=name,
-        mail=mail,
-        type_skin=type_skin,
-        preferences=preferences
-    )
-    db.add(nuevo_usuario)
-    db.commit()
-    db.close()
-    return RedirectResponse(url="/", status_code=303)
 
 
 
@@ -123,68 +121,6 @@ async def mostrar_catalogo(request: Request, db: AsyncSession = Depends(get_db))
 
 
 
-# Listar elementos
-@router.get("/{modelo}s", response_class=HTMLResponse)
-async def listar(request: Request, modelo: str):
-    modelo = modelo.capitalize()
-    if modelo not in csv_files:
-        return HTMLResponse("Modelo no encontrado", status_code=404)
 
-    df = pd.read_csv(csv_files[modelo])
-    df["id"] = df.index
-    lista = df.to_dict(orient="records")
 
-    return templates.TemplateResponse("list.html", {
-        "request": request,
-        "nombre_modelo": modelo,
-        "items": lista
-    })
-
-# Mostrar formulario para agregar
-@router.get("/{modelo}/add", response_class=HTMLResponse)
-async def mostrar_formulario(request: Request, modelo: str):
-    modelo = modelo.capitalize()
-    if modelo not in campos_modelos:
-        return HTMLResponse("Modelo no válido", status_code=404)
-
-    return templates.TemplateResponse("form.html", {
-        "request": request,
-        "nombre_modelo": modelo,
-        "campos": campos_modelos[modelo],
-        "valores": {},
-        "ruta_accion": f"/{modelo}/add"
-    })
-
-# Procesar formulario
-@router.post("/{modelo}/add")
-async def agregar_item(request: Request, modelo: str, **datos: str):
-    modelo = modelo.capitalize()
-    if modelo not in campos_modelos:
-        return HTMLResponse("Modelo no válido", status_code=404)
-
-    df = pd.read_csv(csv_files[modelo])
-    nuevo_registro = [datos[campo] for campo in campos_modelos[modelo]]
-    df.loc[len(df)] = nuevo_registro
-    df.to_csv(csv_files[modelo], index=False)
-
-    return RedirectResponse(url=f"/{modelo}s", status_code=303)
-
-# Ver detalle de un ítem
-@router.get("/{modelo}/detail/{id}", response_class=HTMLResponse)
-async def ver_detalle(request: Request, modelo: str, id: int):
-    modelo = modelo.capitalize()
-    if modelo not in csv_files:
-        return HTMLResponse("Modelo no encontrado", status_code=404)
-
-    df = pd.read_csv(csv_files[modelo])
-    if id < 0 or id >= len(df):
-        return HTMLResponse("Ítem no encontrado", status_code=404)
-
-    fila = df.iloc[id].to_dict()
-
-    return templates.TemplateResponse("detail.html", {
-        "request": request,
-        "nombre_modelo": modelo,
-        "item": fila
-    })
 

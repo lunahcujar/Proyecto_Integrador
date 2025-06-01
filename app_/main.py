@@ -30,7 +30,7 @@ from app_.products import *
 
 from fastapi.staticfiles import StaticFiles
 from app_.templates.routes import router
-
+from app_.templates.routes import router as views_router
 
 app = FastAPI()
 
@@ -39,7 +39,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # Incluir las rutas
-app.include_router(router)
+app.include_router(views_router)
 
 
 

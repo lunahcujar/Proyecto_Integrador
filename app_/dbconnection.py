@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 import asyncio
 
 # config.py
-DATABASE_URL = "postgresql+asyncpg://up0tylamg5oeuyqipggn:sEQVsg6ep7tsp235p7eUFCtlg18bgV@bop5umm1n5esodyazqwt-postgresql.services.clever-cloud.com:50013/bop5umm1n5esodyazqwt"
+DATABASE_URL = "postgresql+asyncpg://upn9erycnaeggnjnb9v1:CKYILYal1b49necyr754rr3vGNKq1I@b44hp482ypmz43ebpesq-postgresql.services.clever-cloud.com:50013/b44hp482ypmz43ebpesq"
 
 
 # Crear el motor de conexión asincrónica
