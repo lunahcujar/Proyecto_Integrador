@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Registro de Usuario{% endblock %}
+
+{% block content %}
+<h2>Registro de Usuario</h2>
+<form id="registroForm" class="formulario">
+    <label for="name">Nombre:</label><br>
+    <input type="text" id="name" name="name" required><br><br>
+
+    <label for="mail">Correo electrónico:</label><br>
+    <input type="email" id="mail" name="mail" required><br><br>
+
+    <label for="type_skin">Tipo de piel:</label><br>
+    <select id="type_skin" name="type_skin">
+        <option value="">Seleccione...</option>
+        <option value="seca">Seca</option>
+        <option value="grasa">Grasa</option>
+        <option value="mixta">Mixta</option>
+        <option value="normal">Normal</option>
+        <option value="sensible">Normal</option>
+    </select><br><br>
+
+    <label><input type="checkbox" name="preferences"> Acepto recibir recomendaciones</label><br><br>
+
+    <button type="submit">Registrarse</button>
+</form>
+
+<script>
+document.getElementById("registroForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const data = {
+        name: e.target.name.value,
+        mail: e.target.mail.value,
+        type_skin: e.target.type_skin.value || null,
+        preferences: e.target.preferences.checked
+    };
+
+    try {
+        const response = await fetch("/api/usuarios", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            alert("Usuario registrado correctamente");
+            e.target.reset();
+        } else {
+            const err = await response.json();
+            alert("Error: " + (err.detail || 'No se pudo registrar'));
+        }
+    } catch (error) {
+        alert("Error al conectar con el servidor.");
+    }
+});
+</script>
+{% endblock %}

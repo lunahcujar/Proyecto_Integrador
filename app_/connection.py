@@ -26,7 +26,9 @@ async def migrate_from_csv(csv_path):
             url=row["product_url"],
             type=row["product_type"],
             ingredients=row["clean_ingreds"],
-            price=clean_price(row["price"])
+            price=clean_price(row["price"]),
+            image_url=row["image_url"],
+            skin_type=row["skin_type"]
         )
         for _, row in df.iterrows()
     ]
@@ -42,6 +44,6 @@ if __name__ == "__main__":
     import os
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.join(base_dir, "skincare_products_clean.csv")
+    csv_path = os.path.join(base_dir, "skincare_products_with_skin_type.csv")
 
     asyncio.run(migrate_from_csv(csv_path))

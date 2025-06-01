@@ -3,14 +3,50 @@ from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import pandas as pd
+from requests import Session
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_.dbconnection import get_db
+from app_.models import SkinType, User
 from app_.products import Product
+from flask import Flask, render_template
+from urllib.parse import urlparse, parse_qs
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app_/templates")
+
+
+@router.get("/add_user", response_class=HTMLResponse)
+async def show_form(request: Request):
+    return templates.TemplateResponse("users.html", {"request": request})
+
+
+class SessionLocal:
+    pass
+
+
+@router.post("/registrar_usuario")
+async def register_user(
+    name: str = Form(...),
+    mail: str = Form(...),
+    type_skin: SkinType = Form(...),
+    preferences: bool = Form(False)
+):
+    db: Session = SessionLocal()
+    nuevo_usuario = User(
+        name=name,
+        mail=mail,
+        type_skin=type_skin,
+        preferences=preferences
+    )
+    db.add(nuevo_usuario)
+    db.commit()
+    db.close()
+    return RedirectResponse(url="/", status_code=303)
+
+
+
 
 # Página principal
 @router.get("/", response_class=HTMLResponse)
@@ -33,6 +69,29 @@ campos_modelos = {
 
 #catalogo (list)
 
+def extract_direct_image_url(full_url):
+    try:
+        query = urlparse(full_url).query
+        return parse_qs(query)["url"][0]
+    except:
+        return full_url  # si falla, deja el original
+
+
+# ✅ Función para limpiar la URL de Lookfantastic
+from urllib.parse import urlparse, parse_qs, unquote
+
+def extract_direct_image_url(proxy_url: str) -> str:
+    try:
+        parsed = urlparse(proxy_url)
+        query = parse_qs(parsed.query)
+        real_url = query.get("url", [None])[0]
+        if real_url:
+            return unquote(real_url)  # decodifica %3A%2F%2F, etc.
+        return proxy_url
+    except Exception:
+        return proxy_url
+
+
 @router.get("/productos", response_class=HTMLResponse)
 async def mostrar_catalogo(request: Request, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Product))
@@ -45,7 +104,9 @@ async def mostrar_catalogo(request: Request, db: AsyncSession = Depends(get_db))
             "url": p.url,
             "type": p.type,
             "ingredients": p.ingredients,
-            "price": p.price
+            "price": p.price,
+            "image_url": extract_direct_image_url(p.image_url),
+            "skin_type": p.skin_type
         }
         for p in productos
     ]
@@ -55,6 +116,10 @@ async def mostrar_catalogo(request: Request, db: AsyncSession = Depends(get_db))
         "nombre_modelo": "Producto",
         "items": lista
     })
+
+
+
+
 
 
 

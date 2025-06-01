@@ -20,9 +20,6 @@ class SkinType(str, Enum):
     sensible = "sensible"
     mixta = "mixta"
     normal = "normal"
-    acneica = "acneica"
-    madura = "madura"
-    todo_tipo = "todo_tipo"
 
 # Modelo SQLAlchemy de Usuario
 class User(Base):

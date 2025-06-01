@@ -22,6 +22,9 @@ class Product(Base):
     type = Column(String, nullable=False)
     ingredients = Column(String, nullable=False)
     price = Column(Float, nullable=False)
+    image_url = Column("image", String, nullable=False)  # ✅ aquí está el cambio
+    skin_type = Column(String, nullable=False)
+
 
 # Modelos Pydantic para validaciones y transferencias de datos
 class ProductCreate(BaseModel):
@@ -30,6 +33,8 @@ class ProductCreate(BaseModel):
     type: Optional[str] = None
     ingredients: Optional[str] = None
     price: Optional[float] = None
+    image :Optional[str] = None
+    skin_type :Optional[str] = None
 
     class Config:
         orm_mode = True
