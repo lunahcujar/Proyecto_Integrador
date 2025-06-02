@@ -73,7 +73,34 @@ class UserWithId(UpdatedUser):
     class Config:
         orm_mode = True
 
+
+
 # Modelos de hábito
+from pydantic import BaseModel
+
+
+class FrecuenciaEnum(str, Enum):
+    nunca = "nunca"
+    una_vez = "1_vez"
+    dos_veces = "2_veces"
+    diario = "diario"
+    si = "si"
+    no = "no"
+
+
+    pass
+
+
+class HabitCreate(BaseModel):
+    name: str
+    frequency: FrecuenciaEnum
+    user_id: int
+
+    model_config = {
+        "arbitrary_types_allowed": True
+    }
+
+
 class UpdatedHabit(BaseModel):
     name: Optional[str]
     frequency: Optional[str]
@@ -90,3 +117,4 @@ class HabitWithId(BaseModel):
 
     class Config:
         orm_mode = True
+

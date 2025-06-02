@@ -4,7 +4,7 @@
 
 {% block content %}
 <h2>Registro de Usuario</h2>
-<form id="registroForm" class="formulario">
+<form id="formularioRegistro" class="formulario">
     <label for="name">Nombre:</label><br>
     <input type="text" id="name" name="name" required><br><br>
 
@@ -12,29 +12,33 @@
     <input type="email" id="mail" name="mail" required><br><br>
 
     <label for="type_skin">Tipo de piel:</label><br>
-    <select id="type_skin" name="type_skin">
-        <option value="">Seleccione...</option>
+    <select id="type_skin" name="type_skin" required>
+        <option value="">Seleccione</option>
         <option value="seca">Seca</option>
         <option value="grasa">Grasa</option>
         <option value="mixta">Mixta</option>
         <option value="normal">Normal</option>
-        <option value="sensible">Sensible</option>
     </select><br><br>
 
-    <label><input type="checkbox" name="preferences"> Acepto recibir recomendaciones</label><br><br>
+    <label>
+        <input type="checkbox" id="preferences" name="preferences">
+        Acepto recibir recomendaciones personalizadas
+    </label><br><br>
 
     <button type="submit">Registrarse</button>
 </form>
 
 <script>
-document.getElementById("registroForm").addEventListener("submit", async function (e) {
+document.getElementById("formularioRegistro").addEventListener("submit", async function (e) {
     e.preventDefault();
+
+    const preferencesChecked = e.target.preferences.checked;
 
     const data = {
         name: e.target.name.value,
         mail: e.target.mail.value,
-        type_skin: e.target.type_skin.value || null,
-        preferences: e.target.preferences.checked
+        type_skin: e.target.type_skin.value,
+        preferences: preferencesChecked
     };
 
     try {
@@ -44,15 +48,23 @@ document.getElementById("registroForm").addEventListener("submit", async functio
             body: JSON.stringify(data)
         });
 
+        const result = await response.json();
+
         if (response.ok) {
-            alert("Usuario registrado correctamente");
-            e.target.reset();
+            localStorage.setItem("user_id", result.id);  // Guarda el ID del nuevo usuario
+
+            if (preferencesChecked) {
+                window.location.href = "/test-habitos";  // Solo si quiere recomendaciones
+            } else {
+                alert("Registro exitoso. No se solicitarán recomendaciones.");
+                // Puedes redirigir a otra página si quieres, por ejemplo:
+                // window.location.href = "/gracias";
+            }
         } else {
-            const err = await response.json();
-            alert("Error: " + (err.detail || 'No se pudo registrar'));
+            alert("Error al registrar usuario: " + (result.detail || "Revisa los campos"));
         }
     } catch (error) {
-        alert("Error al conectar con el servidor.");
+        alert("Error de conexión con el servidor.");
     }
 });
 </script>

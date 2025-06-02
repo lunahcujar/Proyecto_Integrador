@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Test de Hábitos{% endblock %}
+
+{% block content %}
+<style>
+    .formulario {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        background-color: #f9f9f9;
+    }
+
+    .formulario label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .formulario select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+
+    .formulario button {
+        padding: 10px 20px;
+        background-color: #2f80ed;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .formulario button:hover {
+        background-color: #1c5db3;
+    }
+</style>
+
+<h2 style="text-align:center;">Test de Hábitos de Cuidado de la Piel</h2>
+
+<form id="habitsForm" class="formulario">
+    <label for="lavado">¿Te lavas la cara dos veces al día?</label>
+    <select id="lavado" name="lavado" required>
+        <option value="">Seleccione</option>
+        <option value="si">Sí</option>
+        <option value="no">No</option>
+    </select>
+
+    <label for="bloqueador">¿Usas protector solar diariamente?</label>
+    <select id="bloqueador" name="bloqueador" required>
+        <option value="">Seleccione</option>
+        <option value="si">Sí</option>
+        <option value="no">No</option>
+    </select>
+
+    <label for="exfoliacion">¿Con qué frecuencia exfolias tu piel?</label>
+    <select id="exfoliacion" name="exfoliacion" required>
+        <option value="">Seleccione</option>
+        <option value="nunca">Nunca</option>
+        <option value="1_vez">1 vez por semana</option>
+        <option value="2_veces">2 veces por semana</option>
+        <option value="diario">A diario</option>
+    </select>
+
+    <button type="submit">Obtener Recomendación</button>
+</form>
+
+<script>
+document.getElementById("habitsForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const user_id = localStorage.getItem("user_id");
+    if (!user_id) {
+        alert("No se encontró el usuario. Por favor regístrese primero.");
+        return;
+    }
+
+    const habitos = [
+        { name: "lavado", frequency: e.target.lavado.value, user_id: parseInt(user_id) },
+        { name: "bloqueador", frequency: e.target.bloqueador.value, user_id: parseInt(user_id) },
+        { name: "exfoliacion", frequency: e.target.exfoliacion.value, user_id: parseInt(user_id) }
+    ];
+
+    try {
+        const response = await fetch("/api/habitos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(habitos)
+        });
+
+        if (response.ok) {
+            // tipoPiel aún se puede usar si quieres mostrar algo
+            await obtenerTipoPiel(user_id);
+            window.location.href = `/recomendaciones`;
+        } else {
+            const error = await response.json();
+            alert("Error al guardar los hábitos: " + (error.detail || "Intenta más tarde."));
+        }
+    } catch (err) {
+        alert("Error de conexión con el servidor.");
+    }
+});
+
+async function obtenerTipoPiel(user_id) {
+    const resp = await fetch(`/api/usuarios/${user_id}`);
+    const data = await resp.json();
+    return data.type_skin || "mixta";
+}
+</script>
+{% endblock %}

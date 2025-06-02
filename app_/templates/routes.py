@@ -1,11 +1,14 @@
 # routes.py
-from fastapi import APIRouter, Request, Form, Depends
+from typing import List
+
+from fastapi import APIRouter, Request, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import pandas as pd
 from requests import Session
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse
 
 from app_.dbconnection import get_db
 from app_.models import SkinType, User
@@ -23,7 +26,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app_.models import User, UserCreate
 from app_.dbconnection import get_db
+from app_ .models import *
 
+
+#users
 
 @router.post("/api/usuarios")
 async def registrar_usuario(usuario: UserCreate, db: AsyncSession = Depends(get_db)):
@@ -34,14 +40,87 @@ async def registrar_usuario(usuario: UserCreate, db: AsyncSession = Depends(get_
         preferences=usuario.preferences or False
     )
     db.add(nuevo_usuario)
-    await db.commit()  # importante: await aquí
-    return {"mensaje": "Usuario registrado"}
+    await db.commit()
+    await db.refresh(nuevo_usuario)  # <-- Esto es necesario para obtener el ID generado
+
+    return {
+        "mensaje": "Usuario registrado",
+        "id": nuevo_usuario.id  # <-- Devuelve el ID
+
+    }
+
+@router.get("/api/usuarios/{user_id}")
+async def obtener_usuario(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.id == user_id))
+    usuario = result.scalars().first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return usuario
+
 
 @router.get("/registro", response_class=HTMLResponse)
 async def mostrar_formulario_registro(request: Request):
     return templates.TemplateResponse("users.html", {"request": request})
 
 
+@router.get("/api/productos")
+async def obtener_productos(skin_type: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Product).where(Product.skin_type.ilike(skin_type))  # Insensible a mayúsculas
+    )
+    productos = result.scalars().all()
+    return productos
+
+
+@router.get("/api/productos")
+async def obtener_productos_por_tipo(skin_type: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Product).where(Product.skin_type == skin_type))
+    productos = result.scalars().all()
+    return productos
+
+
+
+#test_habitos
+
+@router.post("/api/habitos")
+async def crear_habitos(habits: List[HabitCreate], db: AsyncSession = Depends(get_db)):
+    nuevos_habitos = []
+
+    for habit_data in habits:
+        result = await db.execute(select(User).where(User.id == habit_data.user_id))
+        user = result.scalar_one_or_none()
+        if not user:
+            return JSONResponse(status_code=400, content={"detail": f"Usuario {habit_data.user_id} no existe"})
+
+        nuevo = Habit(
+            name=habit_data.name,
+            frequency=habit_data.frequency,
+            user_id=habit_data.user_id
+        )
+        db.add(nuevo)
+        nuevos_habitos.append(nuevo)
+
+    await db.commit()
+    return {"mensaje": f"{len(nuevos_habitos)} hábitos registrados correctamente"}
+
+
+
+
+@router.get("/test-habitos", response_class=HTMLResponse)
+async def mostrar_test_habitos(request: Request):
+    return templates.TemplateResponse("test_habitos.html", {"request": request})
+
+
+#recomendaciones
+
+async def obtener_productos_por_tipo(skin_type: str, db: AsyncSession):
+    stmt = select(Product).where(Product.skin_type == skin_type)
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+@router.get("/recomendaciones", response_class=HTMLResponse)
+async def mostrar_recomendaciones(request: Request):
+    return templates.TemplateResponse("recomendaciones.html", {"request": request})
 
 
 
