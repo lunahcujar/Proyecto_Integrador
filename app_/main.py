@@ -15,14 +15,14 @@ from starlette.staticfiles import StaticFiles
 
 from app_.habit_operations import *
 from app_.models import *
-from app_.db_operations import *
+
 from typing import List
 from contextlib import asynccontextmanager
 from app_.products import Base
 from app_.dbconnection import AsyncSessionLocal, get_db
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
-from app_.db_operations import *
+
 from app_.user_operations import *
 from app_.products_operations import *
 from app_.create_tables import  *
@@ -41,7 +41,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Incluir las rutas
 app.include_router(views_router)
 
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 

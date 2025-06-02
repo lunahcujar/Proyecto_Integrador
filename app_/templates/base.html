@@ -1,22 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Mi App FastAPI{% endblock %}</title>
+    <title>{% block title %}Mi App de Cuidado de la Piel{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        nav a { margin: 0 15px; text-decoration: none; color: #333; }
-        nav a:hover { text-decoration: underline; }
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #fffaf0;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        nav {
+            background-color: #f8e1e7;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-bottom: 4px solid #e4bcc9;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #a85d74;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: color 0.3s, border-bottom 0.3s;
+            padding-bottom: 3px;
+        }
+
+        nav a:hover {
+            color: #7a4054;
+            border-bottom: 2px solid #7a4054;
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            background-color: #f8e1e7;
+            color: #a85d74;
+            font-size: 0.9rem;
+            margin-top: 3rem;
+            border-top: 2px solid #e4bcc9;
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
     <nav>
         <a href="/">Inicio</a>
         <a href="/productos">Productos</a>
-        <a href="/habitos">Añadir hábitos</a>
         <a href="/registro">Registrar usuario</a>
+        <a href="/habitos">Hábitos</a>
     </nav>
-    <hr>
-    {% block content %}{% endblock %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        &copy; 2025 Cuidado de la Piel. Todos los derechos reservados.
+    </footer>
 </body>
 </html>
