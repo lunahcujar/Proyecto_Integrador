@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Producto{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 2rem auto; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background-color: #fff;">
+    <h2 style="text-align: center; color: #a85d74;">Eliminar Producto</h2>
+
+    {% if mensaje %}
+        <div style="background-color: #d4edda; color: #155724; padding: 10px; margin-bottom: 1rem; border-radius: 5px;">
+            {{ mensaje }}
+        </div>
+    {% elif error %}
+        <div style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 1rem; border-radius: 5px;">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <form method="post" action="/productos/eliminar">
+        <label>Nombre del producto a eliminar:</label>
+        <input type="text" name="name" required>
+
+        <button type="submit">Eliminar Producto</button>
+    </form>
+
+    <a href="/descargar/eliminados" download>
+    <button style="background-color: #a85d74; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
+        Descargar Productos Eliminados
+    </button>
+    </a>
+</div>
+
+<style>
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+button {
+    background-color: #a85d74;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+}
+
+button:hover {
+    background-color: #843a50;
+}
+</style>
+{% endblock %}

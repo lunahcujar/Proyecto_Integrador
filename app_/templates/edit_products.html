@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Producto{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 2rem auto; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background-color: #fff;">
+    <h2 style="text-align: center; color: #a85d74;">Editar Producto</h2>
+    <form method="post" action="/productos/editar">
+        <label>ID del producto a modificar:</label>
+        <input type="number" name="id" required>
+
+        <label>Nombre:</label>
+        <input type="text" name="name" required>
+
+        <label>URL:</label>
+        <input type="text" name="url">
+
+        <label>Tipo:</label>
+        <input type="text" name="type">
+
+        <label>Ingredientes:</label>
+        <textarea name="ingredients"></textarea>
+
+        <label>Precio:</label>
+        <input type="number" step="0.01" name="price">
+
+        <label>URL de Imagen:</label>
+        <input type="text" name="image_url">
+
+        <label>Tipo de piel:</label>
+        <input type="text" name="skin_type">
+
+        <button type="submit">Guardar Cambios</button>
+    </form>
+</div>
+
+<style>
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+input, textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+button {
+    background-color: #a85d74;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+}
+
+button:hover {
+    background-color: #843a50;
+}
+</style>
+{% endblock %}
+
