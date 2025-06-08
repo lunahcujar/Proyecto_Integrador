@@ -21,15 +21,31 @@
     .edit-btn {
         background-color: #a85d74;
         color: white;
-        padding: 8px 14px;
+        padding: 6px 10px;
         border-radius: 8px;
         text-decoration: none;
         font-weight: bold;
         transition: background-color 0.3s ease;
+        font-size: 0.8rem;
     }
 
     .edit-btn:hover {
         background-color: #843a50;
+    }
+
+    .delete-btn {
+        background-color: #e74c3c;
+        color: white;
+        padding: 6px 10px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+        font-size: 0.8rem;
+    }
+
+    .delete-btn:hover {
+        background-color: #c0392b;
     }
 
     .search-container {
@@ -146,7 +162,9 @@
             height: 140px;
         }
     }
+
 </style>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <h1>🌿 Catálogo Skincare 🌿</h1>
 
@@ -155,16 +173,6 @@
     {{ msg }}
 </div>
 {% endif %}
-
-<div class="top-bar">
-    <div></div>
-    <a href="/productos/editar" class="edit-btn">Modificar producto</a>
-</div>
-
-<div class="top-bar">
-    <div></div>
-    <a href="/productos/eliminar" class="edit-btn">Eliminar producto</a>
-</div>
 
 <div class="search-container">
     <input type="text" id="searchInput" placeholder="Buscar producto por nombre...">
@@ -184,9 +192,56 @@
         {% endif %}
       </p>
       <p><strong>Precio:</strong> ${{ "%.2f"|format(p.price) }}</p>
+      <div style="display: flex; justify-content: flex-start; gap: 0.5rem; margin-top: 0.5rem;">
+        <a href="/productos/editar/{{ p.id }}" class="edit-btn">🖊️ Editar</a>
+        <button class="delete-btn" onclick="confirmarEliminacion({{ p.id }}, '{{ p.name }}')">🗑️ Eliminar</button>
+      </div>
     </div>
   {% endfor %}
 </div>
+
+<script>
+  function confirmarEliminacion(id, nombre) {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: `¿Deseas eliminar el producto "${nombre}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#e74c3c',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      focusCancel: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Redirige con el parámetro de éxito
+        window.location.href = `/productos/eliminar/${id}?eliminado=1`;
+      }
+    });
+  }
+
+  // Mostrar notificación si el producto fue eliminado exitosamente
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('eliminado') === '1') {
+    Swal.fire({
+      icon: 'success',
+      title: 'Producto eliminado',
+      text: 'El producto fue eliminado exitosamente.',
+      showConfirmButton: false,
+      timer: 2000,
+      toast: true,
+      position: 'top-end'
+    });
+
+    // Quitar el parámetro 'eliminado' para evitar mostrarlo al recargar
+    const url = new URL(window.location.href);
+    url.searchParams.delete('eliminado');
+    window.history.replaceState({}, document.title, url);
+  }
+</script>
+
+
 
 <div class="pagination">
     {% if page is defined %}
@@ -200,7 +255,6 @@
         </form>
     {% endif %}
 </div>
-
 
 <script>
   const paginatedItems = {{ items | tojson }};
@@ -225,6 +279,10 @@
           ${p.ingredients.length > 100 ? `<span class="show-more" onclick="toggleIngredients(${index})" id="toggle-${index}">Ver más</span>` : ''}
         </p>
         <p><strong>Precio:</strong> $${parseFloat(p.price).toFixed(2)}</p>
+        <div style="display: flex; justify-content: flex-start; gap: 0.5rem; margin-top: 0.5rem;">
+          <a href="/productos/editar/${p.id}" class="edit-btn">🖊️ Editar</a>
+          <a href="/productos/eliminar/${p.id}" class="delete-btn">🗑️ Eliminar</a>
+        </div>
       `;
       catalogContainer.appendChild(card);
     });
@@ -250,7 +308,7 @@
     const query = this.value.toLowerCase();
 
     if (query === '') {
-      renderProducts(paginatedItems); // Volver a los productos de la página actual
+      renderProducts(paginatedItems);
       pagination.style.display = 'block';
     } else {
       const filtered = allItems.filter(p => p.name.toLowerCase().includes(query));

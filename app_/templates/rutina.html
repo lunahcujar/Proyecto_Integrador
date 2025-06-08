@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Explorar Hábitos{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 3rem auto; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background-color: #fff; text-align: center;">
+    <h2 style="color: #a85d74;">¡Diseña tu rutina de cuidado de piel!</h2>
+    <p style="margin-top: 1rem;">Para ofrecerte recomendaciones personalizadas, primero necesitamos saber más sobre tus hábitos actuales y tu tipo de piel.</p>
+
+    <p style="margin-top: 1rem;">Si ya estás registrada, continúa con el formulario de hábitos.</p>
+
+    <a href="/test-habitos">
+        <button style="margin-top: 1.5rem; padding: 10px 25px; background-color: #a85d74; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;">
+            Completar hábitos
+        </button>
+    </a>
+
+    <p style="margin-top: 2rem; font-size: 0.95rem;">¿Aún no te has registrado?</p>
+    <a href="/registro">
+        <button style="padding: 8px 20px; background-color: #843a50; color: white; border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer;">
+            Registrarme
+        </button>
+    </a>
+</div>
+{% endblock %}

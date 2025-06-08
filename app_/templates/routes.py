@@ -2,6 +2,7 @@
 import csv
 import os
 from typing import List
+from urllib import request
 
 from fastapi import APIRouter, Request, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -10,12 +11,13 @@ import pandas as pd
 from requests import Session
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.testing import db
 from starlette.responses import JSONResponse, FileResponse
 
 from app_.dbconnection import get_db
 from app_.models import SkinType, User
 from app_.products import Product
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect
 from urllib.parse import urlparse, parse_qs
 
 router = APIRouter()
@@ -215,63 +217,68 @@ async def mostrar_catalogo(request: Request, db: AsyncSession = Depends(get_db))
 
 
 
-from urllib.parse import urlencode
+from app_.products import Product
 
-@router.post("/productos/editar")
-async def editar_producto(
-    request: Request,
-    id: int = Form(...),
-    name: str = Form(...),
-    url: str = Form(""),
-    type: str = Form(""),
-    ingredients: str = Form(""),
-    price: float = Form(0.0),
-    image_url: str = Form(""),
-    skin_type: str = Form(""),
-    db: AsyncSession = Depends(get_db)
-):
+
+
+from fastapi import Request, Depends
+from fastapi.responses import RedirectResponse
+from sqlalchemy.orm import Session
+
+@router.post('/productos/editar/{id}')
+async def editar_producto(id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    # Consulta asincrónica
     result = await db.execute(select(Product).where(Product.id == id))
     producto = result.scalar_one_or_none()
 
-    if producto:
-        producto.name = name
-        producto.url = url
-        producto.type = type
-        producto.ingredients = ingredients
-        producto.price = price
-        producto.image_url = image_url
-        producto.skin_type = skin_type
-        await db.commit()
-        return RedirectResponse(url="/productos?msg=✅+Producto+actualizado+correctamente", status_code=303)
+    if not producto:
+        return templates.TemplateResponse("404.html", {"request": request, "mensaje": "Producto no encontrado"}, status_code=404)
 
-    return HTMLResponse(content="❌ Producto no encontrado", status_code=404)
+    form = await request.form()
+    producto.name = form.get("name")
+    producto.url = form.get("url")
+    producto.type = form.get("type")
+    producto.ingredients = form.get("ingredients")
+    producto.price = float(form.get("price"))
+    producto.image_url = form.get("image_url")
+    producto.skin_type = form.get("skin_type")
+
+    await db.commit()
+
+    return RedirectResponse(url="/productos", status_code=303)
 
 
 
-@router.get("/productos/editar")
-async def mostrar_formulario_edicion(request: Request):
-    return templates.TemplateResponse("edit_products.html", {"request": request})
+
+
+@router.get("/productos/editar/{id}")
+async def mostrar_edicion_producto(id: int, request: Request, db: Session = Depends(get_db)):
+    producto = await db.get(Product, id)
+    if not producto:
+        return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+    return templates.TemplateResponse("edit_products.html", {"request": request, "producto": producto})
+
+
 
 
 
 CSV_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "productos_eliminados.csv"))
 
-@router.get("/productos/eliminar")
-async def mostrar_formulario_eliminar(request: Request, mensaje: str = None):
-    return templates.TemplateResponse("delete_products.html", {"request": request, "mensaje": mensaje})
 
 
-@router.post("/productos/eliminar")
-async def eliminar_producto_por_nombre(
-    request: Request,
-    name: str = Form(...),
-    db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(select(Product).where(Product.name == name))
+
+
+
+@router.get("/productos/eliminar/{id}")
+async def eliminar_producto_por_id(id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Product).where(Product.id == id))
     producto = result.scalar_one_or_none()
 
-    if producto:
-        # Guardar en CSV antes de eliminar
+    if not producto:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+
+    # Guardar en CSV antes de eliminar
+    try:
         file_exists = os.path.isfile(CSV_FILE_PATH)
         with open(CSV_FILE_PATH, mode='a', newline='', encoding='utf-8') as csvfile:
             fieldnames = ['id', 'name', 'url', 'type', 'ingredients', 'price', 'image_url', 'skin_type', 'deleted_at']
@@ -289,16 +296,16 @@ async def eliminar_producto_por_nombre(
                 'skin_type': producto.skin_type,
                 'deleted_at': datetime.now().isoformat()
             })
+    except Exception as e:
+        print(f"[ERROR] Falló al escribir en CSV: {e}")
 
-        await db.execute(delete(Product).where(Product.name == name))
-        await db.commit()
-        return RedirectResponse(url="/productos/eliminar?mensaje=Producto+eliminado+correctamente", status_code=303)
+    await db.execute(delete(Product).where(Product.id == id))
+    await db.commit()
 
-    # Mostrar mensaje de error si no se encontró el producto
-    return templates.TemplateResponse("delete_products.html", {
-        "request": request,
-        "error": f"No se encontró el producto con nombre: {name}"
-    }, status_code=404)
+    # Redirección con parámetro para mostrar SweetAlert
+    return RedirectResponse(url="/productos?eliminado=1", status_code=303)
+
+
 
 
 @router.get("/descargar/eliminados")
@@ -306,3 +313,66 @@ async def descargar_productos_eliminados():
     if os.path.exists(CSV_FILE_PATH):
         return FileResponse(path=CSV_FILE_PATH, filename="productos_eliminados.csv", media_type='text/csv')
     return HTMLResponse(content="No hay productos eliminados aún.", status_code=404)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Endpoint con la información del desarrollador
+
+@router.get("/info/desarrollador")
+async def info_desarrollador():
+    return {
+        "nombre": "Tu Nombre",
+        "correo": "tuemail@ejemplo.com",
+        "semestre": "6º",
+        "programa": "Ingeniería de Sistemas y Computación"
+    }
+
+
+#Endpoint con la información de la fase de planeación
+
+@router.get("/info/planeacion")
+async def info_planeacion():
+    return {
+        "objetivo": "Analizar hábitos de cuidado de piel y recomendar productos",
+        "actividades": [
+            "Definición de requerimientos",
+            "Diseño de modelos",
+            "Planificación de interfaz",
+            "Conexión con base de datos"
+        ]
+    }
+
+
+#Endpoint con la información del diseño
+
+@router.get("/info/diseno")
+async def info_diseno():
+    return {
+        "colores": ["#a85d74", "#843a50"],
+        "estructura": "Estilo limpio, navegación clara, formularios amigables",
+        "plantillas": ["base.html", "formulario_habitos.html", "registro.html"]
+    }
+
+
+# Endpoint con el objetivo del proyecto
+
+@router.get("/info/objetivo")
+async def objetivo_proyecto():
+    return {
+        "objetivo": "Ofrecer una plataforma web que ayude a los usuarios a identificar y mejorar sus rutinas de cuidado de piel, recomendando productos adecuados según sus hábitos."
+    }
