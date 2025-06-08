@@ -31,6 +31,7 @@ class User(Base):
     type_skin = Column(SqlEnum(SkinType), nullable=True)  # CORREGIDO
     preferences = Column(Boolean, default=False)
     date = Column(DateTime, default=datetime.utcnow)
+    image_url = Column(String, nullable=True)
 
     habits = relationship("Habit", back_populates="user")
 
@@ -54,6 +55,7 @@ class UserCreate(BaseModel):
     mail: str
     type_skin: Optional[SkinType]  # Puedes usar SkinType aquí también
     preferences: Optional[bool] = None
+    image_url: Optional[str] = None
 
     class Config:
         orm_mode = True

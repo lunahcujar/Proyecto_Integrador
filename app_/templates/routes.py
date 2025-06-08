@@ -37,20 +37,28 @@ from app_ .models import *
 
 @router.post("/api/usuarios")
 async def registrar_usuario(usuario: UserCreate, db: AsyncSession = Depends(get_db)):
+    # Validación opcional: evitar correos duplicados
+    existing = await db.execute(
+        select(User).where(User.mail == usuario.mail)
+    )
+    if existing.scalar():
+        raise HTTPException(status_code=400, detail="Correo ya registrado")
+
     nuevo_usuario = User(
         name=usuario.name,
         mail=usuario.mail,
         type_skin=usuario.type_skin,
-        preferences=usuario.preferences or False
+        preferences=usuario.preferences or False,
+        image_url=usuario.image_url  # Asegúrate de que el esquema y modelo lo incluyan
     )
+
     db.add(nuevo_usuario)
     await db.commit()
-    await db.refresh(nuevo_usuario)  # <-- Esto es necesario para obtener el ID generado
+    await db.refresh(nuevo_usuario)
 
     return {
         "mensaje": "Usuario registrado",
-        "id": nuevo_usuario.id  # <-- Devuelve el ID
-
+        "id": nuevo_usuario.id
     }
 
 @router.get("/api/usuarios/{user_id}")
