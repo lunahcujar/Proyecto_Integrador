@@ -5,6 +5,10 @@
     <title>{% block title %}Mi App de Cuidado de la Piel{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -77,7 +81,7 @@
 <body>
     <nav>
         <a href="/">Inicio</a>
-        <a href="/productos">Productos</a>
+        <a href="/productos/nuevo">Añadir productos</a>
         <a href="/registro">Registrar usuario</a>
         <a href="/habitos">Hábitos</a>
     </nav>
@@ -85,6 +89,9 @@
     <main>
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Bloque para scripts personalizados (como SweetAlert2) -->
+    {% block scripts %}{% endblock %}
 
     <footer>
         &copy; 2025 Cuidado de la Piel. Todos los derechos reservados.

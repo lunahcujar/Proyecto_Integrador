@@ -259,6 +259,39 @@ async def mostrar_edicion_producto(id: int, request: Request, db: Session = Depe
     return templates.TemplateResponse("edit_products.html", {"request": request, "producto": producto})
 
 
+# Mostrar el formulario de creación
+@router.get("/productos/nuevo")
+async def form_crear_producto(request: Request):
+    return templates.TemplateResponse("add_products.html", {"request": request})
+
+# Guardar el producto en la base de datos
+@router.post("/productos/crear")
+async def crear_producto(
+    name: str = Form(...),
+    url: str = Form(""),
+    type: str = Form(""),
+    ingredients: str = Form(""),
+    price: float = Form(0.0),
+    image_url: str = Form(""),
+    skin_type: str = Form(""),
+    db: AsyncSession = Depends(get_db)
+):
+    nuevo_producto = Product(
+        name=name,
+        url=url,
+        type=type,
+        ingredients=ingredients,
+        price=price,
+        image_url=image_url,
+        skin_type=skin_type
+    )
+    db.add(nuevo_producto)
+    await db.commit()
+    return RedirectResponse(url="/productos?creado=1", status_code=303)
+
+
+
+
 
 
 

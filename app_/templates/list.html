@@ -200,6 +200,7 @@
   {% endfor %}
 </div>
 
+
 <script>
   function confirmarEliminacion(id, nombre) {
     Swal.fire({
@@ -215,14 +216,29 @@
       focusCancel: true
     }).then((result) => {
       if (result.isConfirmed) {
-        // Redirige con el parámetro de éxito
         window.location.href = `/productos/eliminar/${id}?eliminado=1`;
       }
     });
   }
 
-  // Mostrar notificación si el producto fue eliminado exitosamente
   const urlParams = new URLSearchParams(window.location.search);
+
+  // Mostrar notificación si se añadió un producto
+  if (urlParams.get('creado') === '1') {
+    Swal.fire({
+      icon: 'success',
+      title: 'Producto añadido correctamente',
+      showConfirmButton: false,
+      timer: 1800
+    });
+
+    // Limpiar la URL para no repetir la alerta al recargar
+    const url = new URL(window.location.href);
+    url.searchParams.delete('creado');
+    window.history.replaceState({}, document.title, url);
+  }
+
+  // Mostrar notificación si se eliminó un producto
   if (urlParams.get('eliminado') === '1') {
     Swal.fire({
       icon: 'success',
@@ -234,13 +250,11 @@
       position: 'top-end'
     });
 
-    // Quitar el parámetro 'eliminado' para evitar mostrarlo al recargar
     const url = new URL(window.location.href);
     url.searchParams.delete('eliminado');
     window.history.replaceState({}, document.title, url);
   }
 </script>
-
 
 
 <div class="pagination">
