@@ -3,11 +3,78 @@
 {% block title %}Usuarios Registrados{% endblock %}
 
 {% block content %}
-<h1 style="text-align: center;">Usuarios Registrados</h1>
+<<h1 class="titulo-usuarios">👥 Usuarios Registrados</h1>
+
+<style>
+.titulo-usuarios {
+    text-align: center;
+    font-size: 2.5rem;
+    background: linear-gradient(to right, #a85d74, #f7b2c2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    animation: fadeInDown 0.7s ease-out;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
 
 <div style="text-align: center; margin-bottom: 1rem;">
     <input type="text" id="searchInput" placeholder="Buscar por nombre..." onkeyup="filtrarUsuarios()" style="padding: 0.5rem; width: 50%;">
 </div>
+
+{# ✅ Mensaje bonito de éxito #}
+{% if request.query_params.get("mensaje") %}
+<div id="mensajeExito" style="
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #e6ffed;
+    color: #2d7a45;
+    border: 1px solid #c3e6cb;
+    border-left: 5px solid #2d7a45;
+    padding: 15px 20px;
+    margin: 20px auto;
+    width: 80%;
+    border-radius: 8px;
+    font-size: 1rem;
+    animation: fadeIn 0.5s ease;">
+
+    <div style="display: flex; align-items: center;">
+        <span style="font-size: 1.4rem; margin-right: 10px;">✅</span>
+        <span>{{ request.query_params.get("mensaje") }}</span>
+    </div>
+
+    <button onclick="document.getElementById('mensajeExito').style.display='none'" style="
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        color: #2d7a45;
+        cursor: pointer;
+        font-weight: bold;">
+        ×
+    </button>
+</div>
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endif %}
 
 <table id="usuariosTable" style="width: 100%; border-collapse: collapse;">
     <thead>
@@ -16,7 +83,6 @@
             <th>Correo</th>
             <th>Tipo de piel</th>
             <th>Preferencias</th>
-            <th>Fecha</th>
             <th>Foto</th>
             <th colspan="2">Acciones</th>
         </tr>
@@ -28,46 +94,41 @@
             <td>{{ user.mail }}</td>
             <td>{{ user.type_skin.value if user.type_skin else '' }}</td>
             <td>{{ 'Sí' if user.preferences else 'No' }}</td>
-            <td>{{ user.date }}</td>
             <td>
                 {% if user.image_url %}
-                    <img src="{{ user.image_url }}" alt="Foto" width="50">
+                    <img src="{{ user.image_url }}" alt="Foto" width="50" style="border-radius: 5px;">
                 {% else %}
                     Sin imagen
                 {% endif %}
             </td>
             <td>
                 <form action="/modificar_usuario/{{ user.id }}" method="get">
-                    <button type="submit" style="
-                        background-color: #a85d74;
-                        color: white;
-                        border: none;
-                        padding: 5px 10px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        transition: background-color 0.3s ease;">
-                        Modificar
+                    <button type="submit" title="Modificar" style="background-color: transparent; border: none; cursor: pointer;">
+                        <img src="https://cdn-icons-png.flaticon.com/512/1159/1159633.png" alt="Editar" width="24">
                     </button>
                 </form>
             </td>
             <td>
-                <form action="/eliminar_usuario/{{ user.id }}" method="post" onsubmit="return confirm('¿Estás seguro de eliminar este usuario?');">
-                    <button type="submit" style="
-                        background-color: #e04a4a;
-                        color: white;
-                        border: none;
-                        padding: 5px 10px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        transition: background-color 0.3s ease;">
-                        Eliminar
-                    </button>
-                </form>
+                <button onclick="confirmarEliminacion({{ user.id }})" title="Eliminar" style="background-color: transparent; border: none; cursor: pointer;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/6861/6861362.png" alt="Eliminar" width="24">
+                </button>
+                <form id="form-eliminar-{{ user.id }}" action="/eliminar_usuario/{{ user.id }}" method="post" style="display: none;"></form>
             </td>
         </tr>
     {% endfor %}
     </tbody>
 </table>
+
+<!-- Modal personalizado para confirmar eliminación -->
+<div id="modalConfirmacion" style="display:none; position: fixed; top: 0; left: 0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 20px 30px; border-radius: 10px; text-align: center; box-shadow: 0px 0px 15px rgba(0,0,0,0.3);">
+        <p style="font-size: 1.2rem; margin-bottom: 20px;">¿Estás segura de que deseas eliminar este usuario?</p>
+        <div style="display: flex; justify-content: center; gap: 20px;">
+            <button onclick="ejecutarEliminacion()" style="background-color: #e04a4a; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Sí, eliminar</button>
+            <button onclick="cerrarModal()" style="background-color: #aaa; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Cancelar</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -80,6 +141,24 @@
             const nombre = row.querySelector("td").innerText.toLowerCase();
             row.style.display = nombre.includes(input) ? "" : "none";
         });
+    }
+
+    let usuarioAEliminar = null;
+
+    function confirmarEliminacion(userId) {
+        usuarioAEliminar = userId;
+        document.getElementById("modalConfirmacion").style.display = "flex";
+    }
+
+    function cerrarModal() {
+        usuarioAEliminar = null;
+        document.getElementById("modalConfirmacion").style.display = "none";
+    }
+
+    function ejecutarEliminacion() {
+        if (usuarioAEliminar !== null) {
+            document.getElementById(`form-eliminar-${usuarioAEliminar}`).submit();
+        }
     }
 </script>
 {% endblock %}

@@ -134,12 +134,12 @@ async def actualizar_usuario(
     usuario = result.scalar_one_or_none()
 
     if not usuario:
-        return RedirectResponse(url="/usuarios", status_code=302)
+        return RedirectResponse(url="/usuarios?mensaje=Usuario+no+encontrado", status_code=303)
 
     # Actualizar campos
     usuario.name = name
     usuario.mail = mail
-    usuario.type_skin = type_skin
+    usuario.type_skin = SkinType(type_skin)  # Asegúrate que `type_skin` sea compatible con el Enum
     usuario.preferences = preferences.lower() == "true"
 
     # Si se sube una nueva imagen
@@ -159,10 +159,10 @@ async def actualizar_usuario(
         public_url = supabase.storage.from_("userss").get_public_url(filename)
         usuario.image_url = public_url
 
-    # Guardar en Clever Cloud (PostgreSQL)
+    # Guardar cambios en base de datos
     await db.commit()
 
-    return RedirectResponse(url="/usuarios", status_code=302)
+    return RedirectResponse(url="/usuarios?mensaje=Usuario+modificado+correctamente", status_code=303)
 
 
 
@@ -178,7 +178,10 @@ async def eliminar_usuario(user_id: int, db: AsyncSession = Depends(get_db)):
     user = result.scalar_one_or_none()
 
     if user:
-        # (Opcional) Eliminar imagen del bucket en Supabase
+        # 1. Eliminar hábitos del usuario
+        await db.execute(delete(Habit).where(Habit.user_id == user_id))
+
+        # 2. Eliminar imagen de Supabase si existe
         if user.image_url:
             try:
                 path = user.image_url.split("/storage/v1/object/public/userss/")[1]
@@ -186,10 +189,11 @@ async def eliminar_usuario(user_id: int, db: AsyncSession = Depends(get_db)):
             except Exception as e:
                 print("Error al eliminar la imagen:", e)
 
+        # 3. Eliminar usuario
         await db.execute(delete(User).where(User.id == user_id))
         await db.commit()
 
-    return RedirectResponse(url="/usuarios", status_code=303)
+    return RedirectResponse(url="/usuarios?mensaje=Usuario+eliminado+correctamente", status_code=303)
 
 
 
