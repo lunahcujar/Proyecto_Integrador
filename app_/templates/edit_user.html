@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Usuario{% endblock %}
+
+{% block content %}
+<h2 style="text-align: center;">Editar Usuario</h2>
+
+<form action="/modificar_usuario/{{ usuario.id }}" method="post" enctype="multipart/form-data" style="max-width: 600px; margin: auto; background-color: #fffaf0; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <label>Nombre:</label><br>
+    <input type="text" name="name" value="{{ usuario.name }}" style="width: 100%; padding: 8px;"><br><br>
+
+    <label>Correo:</label><br>
+    <input type="email" name="mail" value="{{ usuario.mail }}" style="width: 100%; padding: 8px;"><br><br>
+
+    <label>Tipo de piel:</label><br>
+    <select name="type_skin" style="width: 100%; padding: 8px;">
+        <option value="seca" {% if usuario.type_skin =="seca" %}selected{% endif %}>Seca</option>
+        <option value="grasa" {% if usuario.type_skin =="grasa" %}selected{% endif %}>Grasa</option>
+        <option value="sensible" {% if usuario.type_skin =="sensible" %}selected{% endif %}>Sensible</option>
+        <option value="mixta" {% if usuario.type_skin =="mixta" %}selected{% endif %}>Mixta</option>
+        <option value="normal" {% if usuario.type_skin =="normal" %}selected{% endif %}>Normal</option>
+    </select><br><br>
+
+    <label>Preferencias:</label><br>
+    <select name="preferences" style="width: 100%; padding: 8px;">
+        <option value="true" {% if usuario.preferences %}selected{% endif %}>Sí</option>
+        <option value="false" {% if not usuario.preferences %}selected{% endif %}>No</option>
+    </select><br><br>
+
+    <label>Foto actual:</label><br>
+    {% if usuario.image_url %}
+        <img src="{{ usuario.image_url }}" alt="Foto de perfil" width="100"><br><br>
+    {% else %}
+        <p>Sin imagen</p>
+    {% endif %}
+
+    <label>Subir nueva foto:</label><br>
+    <input type="file" name="image" accept="image/*"><br><br>
+
+    <button type="submit" style="background-color: #a85d74; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+        Guardar Cambios
+    </button>
+</form>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Usuarios Registrados{% endblock %}
+
+{% block content %}
+<h1 style="text-align: center;">Usuarios Registrados</h1>
+
+<div style="text-align: center; margin-bottom: 1rem;">
+    <input type="text" id="searchInput" placeholder="Buscar por nombre..." onkeyup="filtrarUsuarios()" style="padding: 0.5rem; width: 50%;">
+</div>
+
+<table id="usuariosTable" style="width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr style="background-color: #f8e1e7;">
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Tipo de piel</th>
+            <th>Preferencias</th>
+            <th>Fecha</th>
+            <th>Foto</th>
+            <th colspan="2">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for user in usuarios %}
+        <tr style="text-align: center;">
+            <td>{{ user.name }}</td>
+            <td>{{ user.mail }}</td>
+            <td>{{ user.type_skin.value if user.type_skin else '' }}</td>
+            <td>{{ 'Sí' if user.preferences else 'No' }}</td>
+            <td>{{ user.date }}</td>
+            <td>
+                {% if user.image_url %}
+                    <img src="{{ user.image_url }}" alt="Foto" width="50">
+                {% else %}
+                    Sin imagen
+                {% endif %}
+            </td>
+            <td>
+                <form action="/modificar_usuario/{{ user.id }}" method="get">
+                    <button type="submit" style="
+                        background-color: #a85d74;
+                        color: white;
+                        border: none;
+                        padding: 5px 10px;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        transition: background-color 0.3s ease;">
+                        Modificar
+                    </button>
+                </form>
+            </td>
+            <td>
+                <form action="/eliminar_usuario/{{ user.id }}" method="post" onsubmit="return confirm('¿Estás seguro de eliminar este usuario?');">
+                    <button type="submit" style="
+                        background-color: #e04a4a;
+                        color: white;
+                        border: none;
+                        padding: 5px 10px;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        transition: background-color 0.3s ease;">
+                        Eliminar
+                    </button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function filtrarUsuarios() {
+        const input = document.getElementById("searchInput").value.toLowerCase();
+        const rows = document.querySelectorAll("#usuariosTable tbody tr");
+
+        rows.forEach(row => {
+            const nombre = row.querySelector("td").innerText.toLowerCase();
+            row.style.display = nombre.includes(input) ? "" : "none";
+        });
+    }
+</script>
+{% endblock %}

@@ -1,4 +1,7 @@
+import os
+
 import app
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi import HTTPException
 from fastapi.params import Depends
@@ -31,7 +34,8 @@ from app_.products import *
 from fastapi.staticfiles import StaticFiles
 from app_.templates.routes import router
 from app_.templates.routes import router as views_router
-
+from supabase import create_client, Client
+load_dotenv()
 app = FastAPI()
 
 # Montar carpeta estática

@@ -1,15 +1,18 @@
 # routes.py
 import csv
 import os
+import traceback
+import uuid
 from typing import List
 from urllib import request
 
-from fastapi import APIRouter, Request, Form, Depends, HTTPException
+from dotenv import load_dotenv
+from fastapi import APIRouter, Request, Form, Depends, HTTPException, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import pandas as pd
 from requests import Session
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.testing import db
 from starlette.responses import JSONResponse, FileResponse
@@ -31,35 +34,164 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app_.models import User, UserCreate
 from app_.dbconnection import get_db
 from app_ .models import *
+from app_.main import *
+
+from app_.supabase_config import supabase, SUPABASE_BUCKET, SUPABASE_URL
+
 
 
 #users
 
+import uuid
+from fastapi import APIRouter, Form, UploadFile, File, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from app_.models import User
+from app_.dbconnection import get_db
+from app_.supabase_config import supabase, SUPABASE_URL, SUPABASE_BUCKET
+
+router = APIRouter()
+
 @router.post("/api/usuarios")
-async def registrar_usuario(usuario: UserCreate, db: AsyncSession = Depends(get_db)):
-    # Validación opcional: evitar correos duplicados
-    existing = await db.execute(
-        select(User).where(User.mail == usuario.mail)
-    )
-    if existing.scalar():
-        raise HTTPException(status_code=400, detail="Correo ya registrado")
+async def registrar_usuario(
+    name: str = Form(...),
+    mail: str = Form(...),
+    type_skin: str = Form(...),
+    preferences: bool = Form(False),
+    photo: UploadFile = File(None),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        image_url = None
 
-    nuevo_usuario = User(
-        name=usuario.name,
-        mail=usuario.mail,
-        type_skin=usuario.type_skin,
-        preferences=usuario.preferences or False,
-        image_url=usuario.image_url  # Asegúrate de que el esquema y modelo lo incluyan
-    )
+        if photo:
+            filename = f"{uuid.uuid4()}_{photo.filename}"
+            content = await photo.read()
 
-    db.add(nuevo_usuario)
+            response = supabase.storage.from_(SUPABASE_BUCKET).upload(filename, content)
+
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail="❌ Error al subir imagen a Supabase")
+
+            image_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{filename}"
+
+        nuevo_usuario = User(
+            name=name,
+            mail=mail,
+            type_skin=type_skin,
+            preferences=preferences,
+            image_url=image_url
+        )
+
+        db.add(nuevo_usuario)
+        await db.commit()
+        await db.refresh(nuevo_usuario)
+
+        return {
+            "mensaje": "✅ Usuario registrado correctamente",
+            "id": nuevo_usuario.id,
+            "image_url": nuevo_usuario.image_url  # útil para verificar visualmente
+        }
+
+    except Exception as e:
+        await db.rollback()
+        print("❌ ERROR REGISTRANDO USUARIO EN CLEVER:", repr(e))  # Ahora muestra el error detallado
+        raise HTTPException(status_code=500, detail="Error al registrar usuario")
+
+@router.get("/registro", response_class=HTMLResponse)
+async def mostrar_formulario_registro(request: Request):
+    return templates.TemplateResponse("users.html", {"request": request})
+
+@router.get("/usuarios_list")
+async def get_usuarios(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User))
+    usuarios = result.scalars().all()
+    return {"usuarios": [u.__dict__ for u in usuarios]}
+
+
+@router.get("/usuarios")
+async def get_usuarios(request: Request, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User))
+    usuarios = result.scalars().all()
+    return templates.TemplateResponse("users_show.html", {
+        "request": request,
+        "usuarios": usuarios
+    })
+
+
+@router.post("/modificar_usuario/{user_id}")
+async def actualizar_usuario(
+    user_id: int,
+    request: Request,
+    name: str = Form(...),
+    mail: str = Form(...),
+    type_skin: str = Form(...),
+    preferences: str = Form(...),
+    image: UploadFile = File(None),
+    db: AsyncSession = Depends(get_db)
+):
+    # Buscar al usuario
+    result = await db.execute(select(User).where(User.id == user_id))
+    usuario = result.scalar_one_or_none()
+
+    if not usuario:
+        return RedirectResponse(url="/usuarios", status_code=302)
+
+    # Actualizar campos
+    usuario.name = name
+    usuario.mail = mail
+    usuario.type_skin = type_skin
+    usuario.preferences = preferences.lower() == "true"
+
+    # Si se sube una nueva imagen
+    if image and image.filename:
+        extension = image.filename.split(".")[-1]
+        filename = f"{uuid.uuid4()}.{extension}"
+        content = await image.read()
+
+        # Subir a Supabase
+        supabase.storage.from_("userss").upload(
+            path=filename,
+            file=content,
+            file_options={"content-type": image.content_type}
+        )
+
+        # Obtener URL pública y guardar en la DB
+        public_url = supabase.storage.from_("userss").get_public_url(filename)
+        usuario.image_url = public_url
+
+    # Guardar en Clever Cloud (PostgreSQL)
     await db.commit()
-    await db.refresh(nuevo_usuario)
 
-    return {
-        "mensaje": "Usuario registrado",
-        "id": nuevo_usuario.id
-    }
+    return RedirectResponse(url="/usuarios", status_code=302)
+
+
+
+@router.get("/modificar_usuario/{user_id}")
+async def editar_usuario(user_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.id == user_id))
+    usuario = result.scalar_one_or_none()
+    return templates.TemplateResponse("edit_user.html", {"request": request, "usuario": usuario})
+
+@router.post("/eliminar_usuario/{user_id}")
+async def eliminar_usuario(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if user:
+        # (Opcional) Eliminar imagen del bucket en Supabase
+        if user.image_url:
+            try:
+                path = user.image_url.split("/storage/v1/object/public/userss/")[1]
+                supabase.storage.from_("userss").remove([path])
+            except Exception as e:
+                print("Error al eliminar la imagen:", e)
+
+        await db.execute(delete(User).where(User.id == user_id))
+        await db.commit()
+
+    return RedirectResponse(url="/usuarios", status_code=303)
+
+
 
 @router.get("/api/usuarios/{user_id}")
 async def obtener_usuario(user_id: int, db: AsyncSession = Depends(get_db)):
@@ -70,25 +202,14 @@ async def obtener_usuario(user_id: int, db: AsyncSession = Depends(get_db)):
     return usuario
 
 
-@router.get("/registro", response_class=HTMLResponse)
-async def mostrar_formulario_registro(request: Request):
-    return templates.TemplateResponse("users.html", {"request": request})
-
 
 @router.get("/api/productos")
-async def obtener_productos(skin_type: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Product).where(Product.skin_type.ilike(skin_type))  # Insensible a mayúsculas
-    )
-    productos = result.scalars().all()
-    return productos
-
-
-@router.get("/api/productos")
-async def obtener_productos_por_tipo(skin_type: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Product).where(Product.skin_type == skin_type))
-    productos = result.scalars().all()
-    return productos
+async def obtener_productos(skin_type: str = "", db: AsyncSession = Depends(get_db)):
+    query = select(Product)
+    if skin_type:
+        query = query.where(Product.skin_type.ilike(skin_type))
+    result = await db.execute(query)
+    return result.scalars().all()
 
 
 
