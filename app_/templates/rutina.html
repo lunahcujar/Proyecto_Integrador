@@ -1,25 +1,363 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}Explorar Hábitos{% endblock %}
+{% block title %}Tu Rutina Personalizada{% endblock %}
 
 {% block content %}
-<div style="max-width: 700px; margin: 3rem auto; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background-color: #fff; text-align: center;">
-    <h2 style="color: #a85d74;">¡Diseña tu rutina de cuidado de piel!</h2>
-    <p style="margin-top: 1rem;">Para ofrecerte recomendaciones personalizadas, primero necesitamos saber más sobre tus hábitos actuales y tu tipo de piel.</p>
+<style>
+    /* Contenedor principal */
+    .rutina-container {
+        max-width: 700px;
+        margin: 2rem auto;
+        padding: 1.5rem;
+        background-color: #fff0f5;
+        border-radius: 1rem;
+        box-shadow: 0 4px 12px rgba(233, 143, 166, 0.2);
+    }
 
-    <p style="margin-top: 1rem;">Si ya estás registrada, continúa con el formulario de hábitos.</p>
+    /* Formulario de correo */
+    .email-form {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
 
-    <a href="/test-habitos">
-        <button style="margin-top: 1.5rem; padding: 10px 25px; background-color: #a85d74; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;">
-            Completar hábitos
+    .email-form input {
+        padding: 0.8rem;
+        width: 75%;
+        font-size: 1.1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #f2a2b3;
+        margin-bottom: 1rem;
+        background-color: #fff;
+        box-shadow: 0 1px 4px rgba(242, 162, 179, 0.15);
+    }
+
+    .email-form button {
+        padding: 0.7rem 1.2rem;
+        font-size: 1rem;
+        border: none;
+        background-color: #e75480;
+        color: white;
+        border-radius: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .email-form button:hover {
+        background-color: #d23b65;
+    }
+
+    /* Formularios y pasos */
+    .habito-form,
+    .rutina-paso {
+        margin-top: 1rem;
+        padding: 1rem;
+        background-color: #fff;
+        border-radius: 0.75rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Tarjeta de producto */
+    .rutina-paso {
+        display: flex;
+        align-items: flex-start;
+        background-color: #ffeef4;
+        border: 2px solid #f8c6d8;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 20px;
+        gap: 20px;
+        box-shadow: 0 4px 10px rgba(255, 182, 193, 0.3);
+        transition: transform 0.3s ease;
+    }
+
+    .rutina-paso:hover {
+        transform: translateY(-5px);
+    }
+
+    .rutina-paso img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 2px solid #f2a2b3;
+    }
+
+    .rutina-paso h4 {
+        font-size: 1.5rem;
+        color: #e75480;
+        margin: 0 0 8px 0;
+    }
+
+    .rutina-paso p {
+        font-size: 0.95rem;
+        color: #444;
+    }
+
+    .ingredientes-preview {
+        display: inline-block;
+        max-width: 300px;
+        color: #555;
+    }
+
+    .ver-mas-btn {
+        margin-left: 8px;
+        background-color: transparent;
+        color: #e75480;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+    .ver-mas-btn:hover {
+        color: #d23b65;
+    }
+
+    .ver-mas-productos-btn {
+        display: block;
+        background-color: #f8c6d8;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        margin: 20px auto 0;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .ver-mas-productos-btn:hover {
+        background-color: #f2a2b3;
+    }
+
+    /* Mensaje sin datos */
+    .no-datos {
+        text-align: center;
+        font-style: italic;
+        color: #999;
+        font-size: 1rem;
+    }
+
+    /* Botones generales si los hay */
+    button {
+        background-color: #f2a2b3;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+        background-color: #e75480;
+    }
+</style>
+
+
+<div class="rutina-container">
+    <h2>Tus Recomendaciones de Cuidado Facial</h2>
+
+
+        <div class="email-form">
+    <input type="email" id="email" placeholder="Ingresa tu correo electrónico" value="{{ request.query_params.email or '' }}">
+    <br>
+    <button type="button" onclick="verificarUsuario()">Continuar</button>
+
+    <p style="margin-top: 1rem; font-size: 0.95rem; color: #666;">
+        ¿No estás registrado?
+        <button onclick="window.location.href='/registro'" style="margin-left: 0.5rem; background-color: #f8c6d8; color: white;">
+            Registrarse
         </button>
-    </a>
-
-    <p style="margin-top: 2rem; font-size: 0.95rem;">¿Aún no te has registrado?</p>
-    <a href="/registro">
-        <button style="padding: 8px 20px; background-color: #843a50; color: white; border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer;">
-            Registrarme
-        </button>
-    </a>
+    </p>
 </div>
+
+    </div>
+
+    <div id="contenedor-habitos" class="habito-form" style="display: none;">
+        <p>No encontramos hábitos registrados.</p>
+        <button onclick="realizarTestHabitos()">Realizar Test de Hábitos</button>
+    </div>
+
+    <div id="contenedor-rutina">
+        <p class="no-datos">Esperando datos...</p>
+    </div>
+</div>
+
+<script>
+let userId = null;
+let tipoPiel = null;
+
+window.addEventListener("DOMContentLoaded", () => {
+    const emailParam = new URLSearchParams(window.location.search).get("email");
+    if (emailParam) {
+        document.getElementById("email").value = emailParam;
+        localStorage.setItem("user_email", emailParam);
+        verificarUsuario();
+    }
+});
+
+async function verificarUsuario() {
+    const email = document.getElementById("email").value.trim();
+    const contenedor = document.getElementById("contenedor-rutina");
+
+    if (!email) {
+        contenedor.innerHTML = "<p class='no-datos'>Por favor, ingresa un correo válido.</p>";
+        return;
+    }
+
+    contenedor.innerHTML = "<p class='no-datos'>Buscando tu información...</p>";
+    console.log("Buscando usuario con correo:", email);
+
+    try {
+        const resp = await fetch(`/api/usuarios?email=${encodeURIComponent(email)}`);
+        if (!resp.ok) {
+            contenedor.innerHTML = `
+                <p class='no-datos'>Usuario no encontrado.</p>
+                <button onclick="window.location.href='/registro'">Registrarse</button>
+            `;
+            return;
+        }
+
+        const usuario = await resp.json();
+        console.log("Usuario encontrado:", usuario);
+
+        localStorage.setItem("user_id", usuario.id);
+        localStorage.setItem("user_email", email);
+
+        const habitosResp = await fetch(`/api/habitos?user_id=${usuario.id}`);
+        const habitos = await habitosResp.json();
+
+        if (!habitos.length) {
+            document.getElementById("contenedor-habitos").style.display = "block";
+            contenedor.innerHTML = "<p class='no-datos'>No hay hábitos. Realiza el test para continuar.</p>";
+        } else {
+            generarRutinaDesdeBackend(email);
+        }
+
+    } catch (err) {
+        console.error("Error al verificar usuario:", err);
+        contenedor.innerHTML = "<p class='no-datos'>Error al buscar usuario.</p>";
+    }
+}
+
+
+function realizarTestHabitos() {
+    const email = document.getElementById("email").value.trim();
+    window.location.href = `/test-habitos?email=${encodeURIComponent(email)}`;
+}
+async function generarRutinaDesdeBackend(email) {
+    const contenedor = document.getElementById("contenedor-rutina");
+    contenedor.innerHTML = "<p class='no-datos'>Generando tu rutina...</p>";
+
+    try {
+        const resp = await fetch(`/api/rutina?email=${encodeURIComponent(email)}`);
+        const data = await resp.json();
+
+        contenedor.innerHTML = "";
+
+        // === Recomendaciones por hábitos ===
+        const recomendacionesTitulo = document.createElement("h3");
+        recomendacionesTitulo.textContent = "Recomendaciones basadas en tus hábitos:";
+        contenedor.appendChild(recomendacionesTitulo);
+
+        if (!data.recomendaciones_habitos || data.recomendaciones_habitos.length === 0) {
+            const sinRecomendaciones = document.createElement("p");
+            sinRecomendaciones.className = "no-datos";
+            sinRecomendaciones.textContent = "¡Tienes buenos hábitos de cuidado facial!";
+            contenedor.appendChild(sinRecomendaciones);
+        } else {
+            const lista = document.createElement("ul");
+            data.recomendaciones_habitos.forEach(r => {
+                const item = document.createElement("li");
+                item.textContent = r;
+                lista.appendChild(item);
+            });
+            contenedor.appendChild(lista);
+        }
+
+        // === Productos recomendados ===
+        const productosTitulo = document.createElement("h3");
+        productosTitulo.textContent = "Productos recomendados para tu tipo de piel:";
+        contenedor.appendChild(productosTitulo);
+
+        const productos = data.productos_recomendados || [];
+
+        if (productos.length === 0) {
+            const sinProductos = document.createElement("p");
+            sinProductos.className = "no-datos";
+            sinProductos.textContent = "No se encontraron productos recomendados para tu tipo de piel.";
+            contenedor.appendChild(sinProductos);
+        } else {
+            const mostrarProductos = (lista) => {
+                lista.forEach(p => {
+                    const card = document.createElement("div");
+                    card.className = "rutina-paso";
+
+                    const img = document.createElement("img");
+                    img.src = p.imagen || "/static/img/default-product.png";
+                    img.style.width = "100px";
+                    img.style.height = "100px";
+
+                    const ingredientes = p.ingredientes || '';
+                    const mostrarVerMas = ingredientes.length > 80;
+                    const ingredientesCortos = mostrarVerMas ? ingredientes.slice(0, 80) + "..." : ingredientes;
+
+                    const info = document.createElement("div");
+                    info.innerHTML = `
+                        <h4>${p.nombre}</h4>
+                        <p><strong>Ingredientes:</strong>
+                            <span class="ingredientes-preview">${ingredientesCortos}</span>
+                            ${mostrarVerMas ? `<button class="ver-mas-btn">Ver más</button>` : ""}
+                        </p>
+                    `;
+
+                    card.appendChild(img);
+                    card.appendChild(info);
+                    contenedor.appendChild(card);
+
+                    const btnVerMas = card.querySelector(".ver-mas-btn");
+                    if (btnVerMas) {
+                        btnVerMas.onclick = () => {
+                            const preview = card.querySelector(".ingredientes-preview");
+                            preview.textContent = ingredientes;
+                            btnVerMas.remove();
+                        };
+                    }
+                });
+            };
+
+            const primeros = productos.slice(0, 5);
+            mostrarProductos(primeros);
+
+            if (productos.length > 5) {
+                const verMasBtn = document.createElement("button");
+                verMasBtn.textContent = "Ver más productos";
+                verMasBtn.className = "ver-mas-productos-btn";
+                verMasBtn.style.marginTop = "1rem";
+
+                verMasBtn.onclick = () => {
+                    const restantes = productos.slice(5);
+                    mostrarProductos(restantes);
+                    verMasBtn.remove(); // ocultar el botón al hacer clic
+                };
+
+                contenedor.appendChild(verMasBtn);
+            }
+        }
+
+    } catch (error) {
+        console.error(error);
+        contenedor.innerHTML = "<p class='no-datos'>Error al generar rutina desde el servidor.</p>";
+    }
+}
+
+
+
+
+
+</script>
+
 {% endblock %}

@@ -161,15 +161,26 @@ nextBtn.addEventListener("click", () => {
 
 async function guardarHabitos() {
     const user_id = localStorage.getItem("user_id");
-    if (!user_id) {
-        alert("No se encontró el usuario. Por favor regístrese primero.");
+    const email = localStorage.getItem("user_email");
+
+    if (!user_id || !email) {
+        alert("No se encontró el usuario o el correo. Por favor regístrese primero.");
+        return;
+    }
+
+    const lavado = document.getElementById("lavado")?.value;
+    const bloqueador = document.getElementById("bloqueador")?.value;
+    const exfoliacion = document.getElementById("exfoliacion")?.value;
+
+    if (!lavado || !bloqueador || !exfoliacion) {
+        alert("Por favor completa todas las respuestas del test.");
         return;
     }
 
     const habitos = [
-        { name: "lavado", frequency: document.getElementById("lavado").value, user_id: parseInt(user_id) },
-        { name: "bloqueador", frequency: document.getElementById("bloqueador").value, user_id: parseInt(user_id) },
-        { name: "exfoliacion", frequency: document.getElementById("exfoliacion").value, user_id: parseInt(user_id) }
+        { name: "lavado", frequency: lavado, user_id: parseInt(user_id) },
+        { name: "bloqueador", frequency: bloqueador, user_id: parseInt(user_id) },
+        { name: "exfoliacion", frequency: exfoliacion, user_id: parseInt(user_id) }
     ];
 
     try {
@@ -180,12 +191,14 @@ async function guardarHabitos() {
         });
 
         if (response.ok) {
-            window.location.href = `/recomendaciones`;
+            // Redirige directamente a calcular la rutina
+            window.location.href = `/rutina?email=${encodeURIComponent(email)}`;
         } else {
             const error = await response.json();
             alert("Error al guardar los hábitos: " + (error.detail || "Intenta más tarde."));
         }
     } catch (err) {
+        console.error(err);
         alert("Error de conexión con el servidor.");
     }
 }

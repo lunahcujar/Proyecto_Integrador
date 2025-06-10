@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, E
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from enum import Enum
 
@@ -76,6 +76,19 @@ class UserWithId(UpdatedUser):
         orm_mode = True
 
 
+class UsuarioOut(BaseModel):
+    id: int
+    email: str = Field(alias="mail")  # El campo real en la base es 'mail'
+    name: str
+    type_skin: SkinType | None
+    preferences: bool
+    date: datetime
+    image_url: str | None
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
+
 
 # Modelos de hábito
 from pydantic import BaseModel
@@ -95,12 +108,22 @@ class FrecuenciaEnum(str, Enum):
 
 class HabitCreate(BaseModel):
     name: str
-    frequency: FrecuenciaEnum
+    frequency: str
+    user_id: int
+class HabitCreate(BaseModel):
+    name: str
+    frequency: str
     user_id: int
 
-    model_config = {
-        "arbitrary_types_allowed": True
-    }
+
+class HabitResponse(BaseModel):
+    id: int
+    name: str
+    frequency: str
+    user_id: int
+
+    class Config:
+        orm_mode = True
 
 
 class UpdatedHabit(BaseModel):

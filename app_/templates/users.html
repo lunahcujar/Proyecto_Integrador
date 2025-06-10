@@ -172,16 +172,13 @@ document.getElementById("formularioRegistro").addEventListener("submit", async f
         if (response.ok) {
             localStorage.setItem("user_id", result.id);
 
-            // Mostrar anuncio de éxito
             const mensaje = document.getElementById("mensajeExito");
             mensaje.style.display = "block";
 
-            // Redirigir si hay preferencias
-            if (e.target.preferences.checked) {
-                setTimeout(() => {
-                    window.location.href = "/test-habitos";
-                }, 1500);
-            }
+            // Redirigir a /rutina después de mostrar el mensaje
+            setTimeout(() => {
+                window.location.href = "/rutina";
+            }, 3000);
         } else {
             alert("Error al registrar usuario: " + (result.detail || "Revisa los campos"));
         }
@@ -190,5 +187,6 @@ document.getElementById("formularioRegistro").addEventListener("submit", async f
     }
 });
 </script>
+
 
 {% endblock %}

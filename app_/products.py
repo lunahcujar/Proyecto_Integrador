@@ -54,3 +54,16 @@ class UpdatedProduct(BaseModel):
 
     class Config:
         orm_mode = True
+
+class ProductOut(BaseModel):
+    id: int
+    name: str
+    url: str
+    type: str
+    ingredients: str
+    price: float
+    image_url: str
+    skin_type: str
+
+    class Config:
+        orm_mode = True
