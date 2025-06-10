@@ -754,7 +754,9 @@ async def descargar_productos_eliminados():
 
 
 
-
+@router.get("/info", response_class=HTMLResponse)
+async def ver_info(request: Request):
+    return templates.TemplateResponse("info.html", {"request": request})
 
 
 
@@ -775,14 +777,8 @@ async def info_desarrollador():
 async def info_planeacion():
     return {
         "nombre_proyecto": "Sistema de recomendaciones de cuidado de la piel",
-        "descripcion": "Aplicación web que permite a los usuarios registrar sus hábitos de cuidado facial, realizar un test y recibir recomendaciones personalizadas de productos según su tipo de piel.",
-        "objetivo_general": "Analizar los hábitos de cuidado de la piel y recomendar productos adecuados para mejorar la rutina facial del usuario.",
-        "objetivos_especificos": [
-            "Permitir el registro e inicio de sesión de usuarios.",
-            "Recoger datos sobre hábitos diarios mediante un formulario.",
-            "Analizar los hábitos y generar una rutina personalizada.",
-            "Visualizar recomendaciones en una interfaz clara y dinámica."
-        ],
+        "descripcion": "Aplicación web que permite a los usuarios registrar sus hábitos de cuidado facial, realizar un test y recibir recomendaciones personalizadas de productos según su tipo de piel."
+        ,
         "actividades": [
             "Definición de requerimientos funcionales y no funcionales.",
             "Diseño del modelo entidad-relación para usuarios, hábitos y productos.",
@@ -793,11 +789,6 @@ async def info_planeacion():
         "tecnologias": [
             "FastAPI", "Jinja2", "SQLAlchemy", "PostgreSQL", "HTML5", "CSS3", "JavaScript"
         ],
-        "fuente_datos": {
-            "productos": "Información simulada basada en categorías comunes de cosméticos: limpieza, bloqueador, exfoliación.",
-            "hábitos": "Inspirados en rutinas recomendadas por dermatólogos para diferentes tipos de piel.",
-            "usuarios": "Simulados para pruebas y funcionalidad del sistema."
-        }
     }
 
 
@@ -810,25 +801,7 @@ async def info_diseno():
         "colores": ["#a85d74", "#843a50"],
         "tipografia": "Montserrat y Roboto para una lectura clara y moderna.",
         "estructura": "Diseño limpio con navegación superior fija, secciones separadas claramente, formularios centrados y tarjetas de producto bien delimitadas.",
-        "plantillas": [
-            {
-                "nombre": "base.html",
-                "uso": "Plantilla principal con cabecera, pie de página y bloques reutilizables."
-            },
-            {
-                "nombre": "formulario_habitos.html",
-                "uso": "Formulario para que el usuario seleccione sus hábitos de cuidado facial."
-            },
-            {
-                "nombre": "registro.html",
-                "uso": "Formulario de registro para nuevos usuarios."
-            },
-            {
-                "nombre": "rutina.html",
-                "uso": "Vista para mostrar la rutina personalizada con productos recomendados."
-            }
-        ],
-        "responsive": True,
+
         "iconos": "Se usaron íconos de Font Awesome para facilitar la identificación visual."
     }
 
@@ -846,7 +819,7 @@ async def objetivo_proyecto():
             "Evaluación personalizada de hábitos",
             "Recomendaciones automáticas de productos según necesidades individuales",
             "Interfaz amigable y accesible",
-            "Facilita la creación de una rutina efectiva y sostenible"
+            "Facilita la creación de recomendaciones personalizadas",
         ]
     }
 
