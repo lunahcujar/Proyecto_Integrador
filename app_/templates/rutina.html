@@ -139,7 +139,7 @@
         font-size: 1rem;
     }
 
-    /* Botones generales si los hay */
+    /* Botones generales */
     button {
         background-color: #f2a2b3;
         color: white;
@@ -153,6 +153,23 @@
 
     button:hover {
         background-color: #e75480;
+    }
+
+    /* Botón específico de Registrarse */
+    .btn-registrarse {
+        background-color: #f2a2b3;
+        color: white;
+        border: none;
+        padding: 0.7rem 1.5rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-registrarse:hover {
+        background-color: #d23b65;
     }
 </style>
 
@@ -291,6 +308,9 @@ async function generarRutinaDesdeBackend(email) {
             sinProductos.textContent = "No se encontraron productos recomendados para tu tipo de piel.";
             contenedor.appendChild(sinProductos);
         } else {
+            let indiceActual = 0;
+            const cantidadPorPagina = 5;
+
             const mostrarProductos = (lista) => {
                 lista.forEach(p => {
                     const card = document.createElement("div");
@@ -329,23 +349,26 @@ async function generarRutinaDesdeBackend(email) {
                 });
             };
 
-            const primeros = productos.slice(0, 5);
-            mostrarProductos(primeros);
+            const verMasBtn = document.createElement("button");
+            verMasBtn.textContent = "Ver más productos";
+            verMasBtn.className = "ver-mas-productos-btn";
+            verMasBtn.style.marginTop = "1rem";
 
-            if (productos.length > 5) {
-                const verMasBtn = document.createElement("button");
-                verMasBtn.textContent = "Ver más productos";
-                verMasBtn.className = "ver-mas-productos-btn";
-                verMasBtn.style.marginTop = "1rem";
+            const mostrarSiguienteLote = () => {
+                const siguienteLote = productos.slice(indiceActual, indiceActual + cantidadPorPagina);
+                mostrarProductos(siguienteLote);
+                indiceActual += cantidadPorPagina;
 
-                verMasBtn.onclick = () => {
-                    const restantes = productos.slice(5);
-                    mostrarProductos(restantes);
-                    verMasBtn.remove(); // ocultar el botón al hacer clic
-                };
+                if (indiceActual >= productos.length) {
+                    verMasBtn.remove();
+                }
+            };
 
-                contenedor.appendChild(verMasBtn);
-            }
+            // Mostrar primeros 5 productos
+            mostrarSiguienteLote();
+            contenedor.appendChild(verMasBtn);
+
+            verMasBtn.onclick = mostrarSiguienteLote;
         }
 
     } catch (error) {
@@ -353,6 +376,7 @@ async function generarRutinaDesdeBackend(email) {
         contenedor.innerHTML = "<p class='no-datos'>Error al generar rutina desde el servidor.</p>";
     }
 }
+
 
 
 
