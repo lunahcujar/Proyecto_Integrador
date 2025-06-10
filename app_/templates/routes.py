@@ -829,8 +829,8 @@ async def info_planeacion():
             "Construcción de lógica para análisis de hábitos y recomendación de productos."
         ],
 
-        "tecnologias": [
-            "FastAPI", "Jinja2", "SQLAlchemy", "PostgreSQL", "HTML5", "CSS3", "JavaScript"
+        "tecnologías": [
+            "FastAPI", "Jinja2", "SQLAlchemy", "PostgreSQL", "HTML", "CSS", "JavaScript","Supabase", "Render", "Clever"
         ]
     }
 
