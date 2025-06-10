@@ -768,7 +768,8 @@ async def info_desarrollador():
         "nombre": "Luna Herrera Cújar",
         "correo": "lherrera95@ucatolica.edu.co",
         "semestre": "6º",
-        "programa": "Ingeniería de Sistemas y Computación"
+        "programa": "Ingeniería de Sistemas y Computación",
+        "Materia": "Desarrollo de Software"
     }
 
 # Endpoint con la información de la fase de planeación
@@ -776,7 +777,7 @@ async def info_desarrollador():
 @router.get("/info/planeacion")
 async def info_planeacion():
     return {
-        "nombre_proyecto": "Sistema de recomendaciones de cuidado de la piel",
+        "nombre_proyecto": "Sistema de recomendaciones para el cuidado de la piel",
         "descripcion": "Aplicación web que permite a los usuarios registrar sus hábitos de cuidado facial, realizar un test y recibir recomendaciones personalizadas de productos según su tipo de piel."
         ,
         "actividades": [
