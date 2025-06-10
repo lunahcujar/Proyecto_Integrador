@@ -778,19 +778,62 @@ async def info_desarrollador():
 async def info_planeacion():
     return {
         "nombre_proyecto": "Sistema de recomendaciones para el cuidado de la piel",
-        "descripcion": "Aplicación web que permite a los usuarios registrar sus hábitos de cuidado facial, realizar un test y recibir recomendaciones personalizadas de productos según su tipo de piel."
-        ,
+
+        "descripcion": (
+            "Aplicación web que permite a los usuarios registrar sus hábitos de cuidado facial, "
+            "realizar un test de hábitos y recibir recomendaciones personalizadas de productos según su tipo de piel."
+        ),
+
+        "objetivos": [
+            "Desarrollar un sistema interactivo de registro de hábitos faciales.",
+            "Implementar un test automatizado que clasifique tipos de piel y hábitos.",
+            "Generar recomendaciones personalizadas de productos según el perfil del usuario.",
+            "Incorporar imágenes de productos para mejorar la experiencia visual del usuario."
+        ],
+
+        "fuente_datos": "Los datos de productos se obtienen de una base propia enriquecida con información pública de catálogos dermatológicos y tiendas especializadas.",
+
+        "casos_uso": [
+            "Registro de usuario con foto de perfil.",
+            "Ingreso y actualización de hábitos de cuidado facial.",
+            "Realización de test de hábitos.",
+            "Recepción de recomendaciones personalizadas.",
+            "Visualización de productos con imágenes y descripciones.",
+        ],
+
+        "link_diagrama": "<a href='https://lucid.app/lucidchart/45fd4eb5-0947-4aeb-b497-f244fe526ca4/edit?view_items=vIJnuiA_AF.C&invitationId=inv_7a74573c-a061-4a28-8906-b078343e1f6f' target='_blank'>Abrir Diagrama en Lucidchart</a>",
+
+        "modelo_datos": (
+            "<pre>"
+            "Tablas:\n"
+            "- usuarios: id, nombre, email, foto_perfil, tipo_piel\n"
+            "- habitos: id, usuario_id, lava_cara, usa_bloqueador, frecuencia_exfoliacion\n"
+            "- productos: id, nombre, tipo_piel, descripcion, image_url\n\n"
+            "Relaciones:\n"
+            "- Un usuario puede tener muchos hábitos.\n"
+            "- Un producto puede estar asociado a uno o más tipos de piel."
+            "</pre>"
+        ),
+
+        "relaciones": [
+            "Un usuario puede tener muchos hábitos.",
+            "Un producto puede estar asociado a uno o más tipos de piel."
+        ],
+
         "actividades": [
             "Definición de requerimientos funcionales y no funcionales.",
-            "Diseño del modelo entidad-relación para usuarios, hábitos y productos.",
+            "Diseño del modelo entidad-relación que incluye imágenes en productos y fotos de perfil.",
+            "Desarrollo de casos de uso para usuarios y administradores.",
             "Planificación de las vistas HTML y flujo de navegación.",
             "Configuración y conexión con la base de datos PostgreSQL (Clever Cloud).",
             "Construcción de lógica para análisis de hábitos y recomendación de productos."
         ],
+
         "tecnologias": [
             "FastAPI", "Jinja2", "SQLAlchemy", "PostgreSQL", "HTML5", "CSS3", "JavaScript"
-        ],
+        ]
     }
+
 
 
 
@@ -799,11 +842,25 @@ async def info_planeacion():
 @router.get("/info/diseno")
 async def info_diseno():
     return {
-        "colores": ["#a85d74", "#843a50"],
-        "tipografia": "Montserrat y Roboto para una lectura clara y moderna.",
-        "estructura": "Diseño limpio con navegación superior fija, secciones separadas claramente, formularios centrados y tarjetas de producto bien delimitadas.",
+        "descripcion_diagrama": "El diagrama de clases ilustra la estructura del sistema de recomendaciones para el cuidado de la piel, definiendo entidades clave, sus atributos y métodos.",
 
-        "iconos": "Se usaron íconos de Font Awesome para facilitar la identificación visual."
+        "Clase Usuario": "Representa a los usuarios registrados en la plataforma. Contiene atributos como nombre, correo electrónico, contraseña y la URL de la foto de perfil. Ofrece métodos para crear, obtener, actualizar, eliminar y autenticar usuarios.",
+
+        "Clase Habito": "Modela los hábitos de cuidado facial registrados por los usuarios, incluyendo su nombre, frecuencia y la relación con el usuario. Permite crear, obtener, actualizar y eliminar hábitos específicos.",
+
+        "Clase Producto": "Representa los productos dermatológicos disponibles para recomendar. Incluye información como nombre, descripción, tipo de piel recomendado y una imagen del producto. Sus métodos permiten agregar, obtener, buscar por tipo de piel, actualizar y eliminar productos.",
+
+        "Clase Recomendacion": "Gestiona las recomendaciones personalizadas generadas para cada usuario con base en sus hábitos y tipo de piel. Permite generar, obtener, guardar y eliminar recomendaciones.",
+
+        "Diagrama de Clases (Ver Online)": "<a href='https://lucid.app/lucidchart/b4b7958d-5849-41db-ac53-c5324490cd98/edit?viewport_loc=-295%2C-4%2C2129%2C1260%2CszAnfacaZ_wo&invitationId=inv_a8d70908-7972-4bd2-ab95-97f64bca1c99' target='_blank'>Abrir Diagrama en Lucidchart</a>",
+
+        "Colores": ["#a85d74", "#843a50"],
+
+        "Tipografía": "Montserrat y Roboto para una lectura clara y moderna.",
+
+        "Estructura Visual": "Diseño limpio con navegación superior fija, secciones separadas claramente, formularios centrados y tarjetas de producto bien delimitadas.",
+
+        "Iconos": "Se usaron íconos de Font Awesome para facilitar la identificación visual."
     }
 
 

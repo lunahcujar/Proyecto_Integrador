@@ -1,151 +1,86 @@
 {% extends "base.html" %}
-{% block title %}Información del Proyecto{% endblock %}
 
 {% block content %}
 <h2 style="text-align: center; color: #a85d74; margin-bottom: 2rem;">Información del Proyecto</h2>
 
-<div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
-    <div id="carousel-container" style="position: relative; width: 100%; max-width: 600px;">
-        <div id="info-container" style="position: relative; min-height: 200px;"></div>
-
-        <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
-    <button
-        onclick="mostrarAnterior()"
-        style="
-            padding: 0.5rem 1rem;
-            background-color: #a85d74;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        "
-        onmouseover="this.style.backgroundColor='#92485f'; this.style.transform='scale(1.05)'"
-        onmouseout="this.style.backgroundColor='#a85d74'; this.style.transform='scale(1)'"
-        onmousedown="this.style.transform='scale(0.95)'"
-        onmouseup="this.style.transform='scale(1.05)'"
-    >
-        ⬅ Anterior
-    </button>
-
-    <button
-        onclick="mostrarSiguiente()"
-        style="
-            padding: 0.5rem 1rem;
-            background-color: #a85d74;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        "
-        onmouseover="this.style.backgroundColor='#92485f'; this.style.transform='scale(1.05)'"
-        onmouseout="this.style.backgroundColor='#a85d74'; this.style.transform='scale(1)'"
-        onmousedown="this.style.transform='scale(0.95)'"
-        onmouseup="this.style.transform='scale(1.05)'"
-    >
-        Siguiente ➡
-    </button>
+<!-- Botones tipo pestaña -->
+<div id="tab-buttons" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+    <button class="tab-btn" onclick="mostrarSeccion('desarrollador')">👩‍💻 Desarrollador</button>
+    <button class="tab-btn" onclick="mostrarSeccion('planeacion')">🧠 Planeación</button>
+    <button class="tab-btn" onclick="mostrarSeccion('diseno')">🎨 Diseño</button>
+    <button class="tab-btn" onclick="mostrarSeccion('objetivo')">🎯 Objetivo</button>
 </div>
+
+<!-- Contenedor del contenido dinámico -->
+<div id="contenido-info" style="max-width: 900px; margin: auto; padding: 1rem; background: #fff8fa; border-radius: 10px; border: 1px solid #ecc1cf;">
+
+    <p style="text-align: center; color: #888;">Haz clic en una sección para ver la información.</p>
+
 </div>
-    </div>
 
 <script>
-    const secciones = [
-        { nombre: "desarrollador", titulo: "👩‍💻 Desarrollador" },
-        { nombre: "planeacion", titulo: "🧠 Planeación" },
-        { nombre: "diseno", titulo: "🎨 Diseño" },
-        { nombre: "objetivo", titulo: "🎯 Objetivo del Proyecto" }
-    ];
+async function mostrarSeccion(nombre) {
+    const contenedor = document.getElementById("contenido-info");
+    contenedor.innerHTML = "<p style='text-align:center;'>Cargando información...</p>";
 
-    let tarjetas = [];
-    let indiceActual = 0;
+    try {
+        const res = await fetch(`/info/${nombre}`);
+        const data = await res.json();
 
-    async function cargarInfo() {
-        for (const seccion of secciones) {
-            const res = await fetch(`/info/${seccion.nombre}`);
-            const data = await res.json();
-            const tarjeta = crearTarjeta(seccion.titulo, data);
-            tarjetas.push(tarjeta);
-        }
-        mostrarTarjeta(indiceActual);
-    }
-
-    function crearTarjeta(tituloTexto, data) {
-        const tarjeta = document.createElement("div");
-        tarjeta.style.backgroundColor = "#fff";
-        tarjeta.style.border = "1px solid #e4bcc9";
-        tarjeta.style.borderRadius = "12px";
-        tarjeta.style.padding = "1.5rem";
-        tarjeta.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.05)";
-        tarjeta.style.transition = "transform 0.3s";
-        tarjeta.style.boxSizing = "border-box";
-
-        const titulo = document.createElement("h3");
-        titulo.textContent = tituloTexto;
-        titulo.style.color = "#a85d74";
-        titulo.style.marginBottom = "1rem";
-        tarjeta.appendChild(titulo);
-
-        const contenido = document.createElement("div");
+        let html = `<h3 style="color: #a85d74; margin-bottom: 1rem; text-align: center;">${nombre.charAt(0).toUpperCase() + nombre.slice(1)}</h3>`;
 
         for (const [clave, valor] of Object.entries(data)) {
-            const item = document.createElement("div");
-            item.style.marginBottom = "0.75rem";
+    html += `<div style="margin-bottom: 1.2rem;">`;
+    html += `<strong>${formatearClave(clave)}:</strong><br>`;
 
-            const label = document.createElement("strong");
-            label.textContent = clave.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ": ";
-
-            item.appendChild(label);
-
-            if (Array.isArray(valor)) {
-                const lista = document.createElement("ul");
-                lista.style.paddingLeft = "1.2rem";
-                valor.forEach(v => {
-                    const li = document.createElement("li");
-                    li.textContent = v;
-                    lista.appendChild(li);
-                });
-                item.appendChild(lista);
-            } else if (typeof valor === "object") {
-                const sublista = document.createElement("ul");
-                sublista.style.paddingLeft = "1.2rem";
-                for (const [k, v] of Object.entries(valor)) {
-                    const li = document.createElement("li");
-                    li.innerHTML = `<strong>${k}:</strong> ${v}`;
-                    sublista.appendChild(li);
-                }
-                item.appendChild(sublista);
-            } else {
-                const texto = document.createTextNode(valor);
-                item.appendChild(texto);
-            }
-
-            contenido.appendChild(item);
+    if (Array.isArray(valor)) {
+        html += `<ul style="margin-top: 0.5rem; padding-left: 1.2rem;">`;
+        valor.forEach(v => html += `<li>${v}</li>`);
+        html += `</ul>`;
+    } else if (typeof valor === "object" && valor !== null) {
+        html += `<ul style="margin-top: 0.5rem; padding-left: 1.2rem;">`;
+        for (const [k, v] of Object.entries(valor)) {
+            html += `<li><strong>${k}:</strong> ${Array.isArray(v) ? v.join(", ") : v}</li>`;
         }
-
-        tarjeta.appendChild(contenido);
-        return tarjeta;
+        html += `</ul>`;
+    } else {
+        // Aquí se detecta si es una URL para hacerla clickeable
+        if (typeof valor === "string" && valor.startsWith("http")) {
+            html += `<p style="margin-top: 0.3rem;"><a href="${valor}" target="_blank" style="color: #007bff;">${valor}</a></p>`;
+        } else {
+            html += `<p style="margin-top: 0.3rem;">${valor}</p>`;
+        }
     }
 
-    function mostrarTarjeta(indice) {
-        const contenedor = document.getElementById("info-container");
-        contenedor.innerHTML = "";
-        contenedor.appendChild(tarjetas[indice]);
-    }
+    html += `</div>`;
+}
 
-    function mostrarSiguiente() {
-        indiceActual = (indiceActual + 1) % tarjetas.length;
-        mostrarTarjeta(indiceActual);
-    }
 
-    function mostrarAnterior() {
-        indiceActual = (indiceActual - 1 + tarjetas.length) % tarjetas.length;
-        mostrarTarjeta(indiceActual);
+        contenedor.innerHTML = html;
+    } catch (error) {
+        contenedor.innerHTML = "<p style='color: red; text-align: center;'>Error al cargar la información.</p>";
     }
+}
 
-    window.onload = cargarInfo;
+function formatearClave(clave) {
+    return clave.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
 </script>
+
+<!-- Estilos adicionales para los botones -->
+<style>
+.tab-btn {
+    background-color: #a85d74;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.tab-btn:hover {
+    background-color: #843a50;
+}
+</style>
 {% endblock %}
