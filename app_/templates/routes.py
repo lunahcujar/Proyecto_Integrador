@@ -11,7 +11,7 @@ from datetime import datetime
 from app_.api.models import *
 
 from app_.core.dbconnection import get_db
-from app_.api.models import User, Habit
+from app_.api.models import User, Habito
 from supabase import create_client
 from fastapi.responses import RedirectResponse
 import shutil
@@ -62,54 +62,40 @@ except Exception:
 # API: Registrar usuario
 # ==============================
 @router.post("/api/usuarios")
-async def registrar_usuario(
-    name: str = Form(...),
-    mail: str = Form(...),
-    quiz: str = Form(None),  # respuestas del test
-    db: AsyncSession = Depends(get_db)
-):
-    try:
-        # Verificar si el correo ya existe
-        result = await db.execute(select(User).where(User.correo == mail))
-        usuario_existente = result.scalars().first()
-        if usuario_existente:
-            raise HTTPException(status_code=400, detail="El correo ya está registrado.")
+async def registrar_usuario(request: Request, db: AsyncSession = Depends(get_db)):
+    data = await request.json()
+    nombre = data.get("name")
+    correo = data.get("mail")
+    quiz = data.get("quiz", {})
 
-        # Crear nuevo usuario
-        nuevo_usuario = User(
-            nombre=name,
-            correo=mail,
-            foto_url=None  # ya no se solicita foto
-        )
-        db.add(nuevo_usuario)
-        await db.commit()
-        await db.refresh(nuevo_usuario)
+    if not nombre or not correo:
+        raise HTTPException(status_code=400, detail="Faltan datos del usuario.")
 
-        # Procesar y guardar los hábitos (respuestas del test)
-        if quiz:
-            try:
-                respuestas = json.loads(quiz)
-            except json.JSONDecodeError:
-                raise HTTPException(status_code=400, detail="Error al procesar las respuestas del test.")
+    # Verificar si el usuario ya existe
+    existing_user = await db.execute(select(User).where(User.correo == correo))
+    if existing_user.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="El usuario ya está registrado.")
 
-            for pregunta, respuesta in respuestas.items():
-                nuevo_habito = Habit(
-                    user_id=nuevo_usuario.id,
-                    pregunta=pregunta,
-                    respuesta=respuesta
-                )
-                db.add(nuevo_habito)
+    # Crear el usuario
+    nuevo_usuario = User(nombre=nombre, correo=correo)
+    db.add(nuevo_usuario)
+    await db.flush()  # Para obtener el ID antes de commit
 
-            await db.commit()
+    # Extraer respuestas del test
+    habit_data = Habito(
+        usuario_id=nuevo_usuario.id,
+        lavarse_cara=quiz.get("pregunta_1"),
+        protector_solar=quiz.get("pregunta_2"),
+        exfoliacion=quiz.get("pregunta_3"),
+        tipo_piel=quiz.get("pregunta_4"),
+        objetivo=quiz.get("pregunta_5"),
+        edad=int(quiz.get("pregunta_6", 0)) if quiz.get("pregunta_6") else None
+    )
 
-        return {"mensaje": "✅ Usuario y hábitos registrados correctamente."}
+    db.add(habit_data)
+    await db.commit()
 
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        await db.rollback()
-        raise HTTPException(status_code=500, detail=f"❌ Error al registrar usuario: {str(e)}")
-
+    return {"message": "Usuario y hábitos registrados correctamente"}
 # ==============================
 # API: Guardar hábitos
 # ==============================
@@ -185,3 +171,50 @@ async def actualizar_perfil(
 
     await db.commit()
     return RedirectResponse(url=f"/perfil/{usuario_id}", status_code=303)
+
+
+
+@router.get("/api/rutina")
+async def generar_rutina(email: str, db: AsyncSession = Depends(get_db)):
+    print(f"📩 Recibiendo solicitud de rutina para: {email}")
+    try:
+        usuario = await db.execute(select(User).where(User.correo == email))
+        usuario = usuario.scalars().first()
+        if not usuario:
+            print("❌ Usuario no encontrado")
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        habito = await db.execute(select(Habito).where(Habito.usuario_id == usuario.id))
+        habito = habito.scalars().first()
+        if not habito:
+            print("❌ No hay hábitos registrados")
+            raise HTTPException(status_code=404, detail="No hay hábitos registrados")
+
+        from supabase import create_client
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("✅ Conexión a Supabase exitosa")
+
+        resp = supabase.table("productos").select("*").eq("skin_type", habito.tipo_piel).execute()
+        productos = resp.data
+        print(f"🧴 Productos encontrados: {len(productos)} para piel {habito.tipo_piel}")
+
+        def normalizar_tipo(tipo):
+            return tipo.lower().strip()
+
+        tipos_manana = ["limpiador", "cleanser", "hidratante", "moisturizer", "bloqueador solar", "sunscreen"]
+        tipos_noche = ["limpiador", "cleanser", "exfoliante", "scrub", "hidratante", "moisturizer"]
+
+        rutina_manana = [p for p in productos if normalizar_tipo(p["product_type"]) in tipos_manana]
+        rutina_noche = [p for p in productos if normalizar_tipo(p["product_type"]) in tipos_noche]
+
+        print(f"🌞 Rutina mañana: {len(rutina_manana)} productos")
+        print(f"🌙 Rutina noche: {len(rutina_noche)} productos")
+
+        return {
+            "manana": rutina_manana[:3],
+            "noche": rutina_noche[:3]
+        }
+
+    except Exception as e:
+        print(f"💥 Error al generar rutina: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,33 +1,50 @@
+import os
+import ssl
 from typing import AsyncGenerator
+from dotenv import load_dotenv
+from supabase import create_client
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-import ssl
 
-# URL de conexión (SQLite en local)
+# Cargar variables desde .env
+load_dotenv()
+print("🔍 SUPABASE_URL:", os.getenv("SUPABASE_URL"))
+print("🔍 SUPABASE_KEY:", os.getenv("SUPABASE_KEY")[:10], "...")
+
+
+# Variables de entorno
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+# Crear cliente de Supabase
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# Conexión a la base de datos (Supabase Postgres)
 DATABASE_URL = "postgresql+asyncpg://postgres:Mi1familia234@db.lajsdmootdbzlnlyfeum.supabase.co:5432/postgres"
 
-
-# Crear el motor de conexión asincrónica
+# Configurar SSL
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
+# Crear motor de conexión asincrónica
 engine = create_async_engine(
     DATABASE_URL,
     echo=True,
     connect_args={"ssl": ssl_context}
 )
-# Crear la base declarativa
+
+# Base declarativa
 Base = declarative_base()
 
-# Crear la sesión asíncrona
+# Sesión asíncrona
 AsyncSessionLocal = sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False,
 )
 
-# Dependency que se inyecta con Depends() en FastAPI
+# Dependency para FastAPI
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
-        yield session  # Se cierra automáticamente al salir del contexto
+        yield session

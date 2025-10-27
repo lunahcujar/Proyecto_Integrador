@@ -31,8 +31,9 @@
 
     h2 {
         color: #ff4081;
-        font-size: 2rem;
-        margin-bottom: 1rem;
+        font-size: 2.2rem;
+        margin-bottom: 1.2rem;
+        font-weight: 700;
     }
 
     p {
@@ -52,10 +53,13 @@
         border-radius: 50%;
         margin-bottom: 1rem;
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
     }
 
+    .question-image:hover { transform: scale(1.05); }
+
     .option {
-        padding: 15px;
+        padding: 18px;
         border: 2px solid #ddd;
         border-radius: 15px;
         background: #fff;
@@ -79,48 +83,52 @@
 
     .quiz-button {
         margin-top: 2rem;
-        padding: 14px 36px;
+        padding: 16px 40px;
         background: linear-gradient(135deg, #ff69b4, #ff85c1);
         color: white;
         border: none;
-        border-radius: 12px;
+        border-radius: 14px;
         cursor: pointer;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         display: none;
-        transition: all 0.3s;
+        transition: all 0.3s ease;
     }
 
     .quiz-button:hover {
-        transform: scale(1.05);
+        transform: scale(1.08);
         background: linear-gradient(135deg, #ff4081, #ff6fb0);
     }
 
-    input, button {
-        outline: none;
+    input {
+        width: 80%;
+        padding: 14px;
+        border-radius: 12px;
+        border: 1.8px solid #ccc;
+        font-size: 1.2rem;
+        text-align: center;
+        transition: all 0.3s ease;
     }
 
-    form input {
-        width: 100%;
-        padding: 12px;
-        border-radius: 10px;
-        border: 1.5px solid #ccc;
-        font-size: 1rem;
+    input:focus {
+        border-color: #ff69b4;
+        box-shadow: 0 0 8px #ffb6c1;
     }
 
     form button {
-        background: #4CAF50;
+        background: linear-gradient(135deg, #4CAF50, #66bb6a);
         color: white;
-        font-size: 1.2rem;
-        padding: 12px;
-        border-radius: 10px;
+        font-size: 1.3rem;
+        padding: 14px;
+        border-radius: 12px;
         cursor: pointer;
         width: 100%;
+        transition: transform 0.3s ease;
     }
 
     form button:hover {
-        background: #43a047;
+        transform: scale(1.05);
+        background: linear-gradient(135deg, #43a047, #57b55d);
     }
-
 </style>
 
 <div class="quiz-container">
@@ -130,68 +138,76 @@
     <div class="step active" data-step="1">
         <img src="/static/img/lavarse-cara.jpg" class="question-image" alt="Lavar el rostro">
         <p>1️⃣ ¿Te lavas la cara todos los días?</p>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4 w-full">
             <div class="option" data-value="Sí">Sí</div>
             <div class="option" data-value="No">No</div>
         </div>
-        <button class="quiz-button">Siguiente</button>
+        <button class="quiz-button">Siguiente ➡️</button>
     </div>
 
     <!-- Paso 2 -->
     <div class="step" data-step="2">
         <img src="/static/img/protector-solar.jpg" class="question-image" alt="Protector solar">
         <p>2️⃣ ¿Usas protector solar?</p>
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-3 gap-4 w-full">
             <div class="option" data-value="Siempre">Siempre</div>
             <div class="option" data-value="A veces">A veces</div>
             <div class="option" data-value="Nunca">Nunca</div>
         </div>
-        <button class="quiz-button">Siguiente</button>
+        <button class="quiz-button">Siguiente ➡️</button>
     </div>
 
     <!-- Paso 3 -->
     <div class="step" data-step="3">
         <img src="/static/img/exfoliacion.jpg" class="question-image" alt="Exfoliación facial">
         <p>3️⃣ ¿Con qué frecuencia te exfolias?</p>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4 w-full">
             <div class="option" data-value="1 vez por semana">1 vez por semana</div>
             <div class="option" data-value="2 o más veces por semana">2 o más veces por semana</div>
             <div class="option" data-value="Rara vez">Rara vez</div>
         </div>
-        <button class="quiz-button">Siguiente</button>
+        <button class="quiz-button">Siguiente ➡️</button>
     </div>
 
     <!-- Paso 4 -->
     <div class="step" data-step="4">
         <img src="/static/img/tipos-piel.jpg" class="question-image" alt="Tipos de piel">
         <p>4️⃣ ¿Cómo describirías tu tipo de piel?</p>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4 w-full">
             <div class="option" data-value="Grasa">Grasa</div>
             <div class="option" data-value="Seca">Seca</div>
             <div class="option" data-value="Mixta">Mixta</div>
             <div class="option" data-value="Sensible">Sensible</div>
         </div>
-        <button class="quiz-button">Siguiente</button>
+        <button class="quiz-button">Siguiente ➡️</button>
     </div>
 
     <!-- Paso 5 -->
     <div class="step" data-step="5">
         <img src="/static/img/cuidado-piel-objetivos.jpg" class="question-image" alt="Objetivos de cuidado facial">
         <p>5️⃣ ¿Cuál es tu objetivo principal?</p>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4 w-full">
             <div class="option" data-value="Controlar el acné">Controlar el acné</div>
             <div class="option" data-value="Reducir manchas">Reducir manchas</div>
             <div class="option" data-value="Prevenir arrugas">Prevenir arrugas</div>
             <div class="option" data-value="Mantener hidratación">Mantener hidratación</div>
         </div>
-        <button class="quiz-button">Finalizar</button>
+        <button class="quiz-button">Siguiente ➡️</button>
     </div>
 
-    <!-- Paso 6 -->
+    <!-- Paso 6 (Edad) -->
     <div class="step" data-step="6">
+        <img src="/static/img/edad.jpg" class="question-image" alt="Edad del usuario">
+        <p>6️⃣ ¿Cuál es tu edad?</p>
+        <input type="number" id="edadInput" placeholder="Ingresa tu edad" min="10" max="99" required>
+        <button class="quiz-button" style="display:inline-block;">Siguiente ➡️</button>
+    </div>
+
+    <!-- Paso 7 (Registro final) -->
+    <div class="step" data-step="7">
         <img src="/static/img/registro-usuario.jpg" class="question-image" alt="Registro de usuario">
         <p>💚 Completa tus datos para guardar tu perfil 💚</p>
-        <form id="registerForm" class="space-y-3">
+        <form id="registerForm" class="space-y-3 w-full">
             <input type="text" name="name" placeholder="Tu nombre completo" required>
             <input type="email" name="mail" placeholder="Correo electrónico" required>
             <button type="submit">Registrar y ver mi rutina 💫</button>
@@ -201,7 +217,7 @@
 
 <script>
 let currentStep = 1;
-const totalSteps = 6;
+const totalSteps = 7;
 let respuestas = {};
 
 document.querySelectorAll(".option").forEach(opt => {
@@ -220,6 +236,15 @@ document.querySelectorAll(".option").forEach(opt => {
 
 document.querySelectorAll(".quiz-button").forEach(btn => {
     btn.addEventListener("click", () => {
+        if (currentStep === 6) {
+            const edad = document.getElementById("edadInput").value;
+            if (!edad) {
+                alert("Por favor ingresa tu edad antes de continuar");
+                return;
+            }
+            respuestas["edad"] = edad;
+        }
+
         document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove("active");
         currentStep++;
         if (currentStep <= totalSteps) {
@@ -231,7 +256,6 @@ document.querySelectorAll(".quiz-button").forEach(btn => {
 
 document.getElementById("registerForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const data = {
         name: e.target.name.value,
         mail: e.target.mail.value,

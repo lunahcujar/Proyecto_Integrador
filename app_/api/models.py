@@ -25,24 +25,23 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(100), nullable=False)
     correo = Column(String(120), unique=True, nullable=False)
-    edad = Column(Integer, nullable=True)
-    foto_url = Column(String(255), nullable=True)
+    habitos = relationship("Habito", back_populates="usuario", cascade="all, delete-orphan")
 
-    # Relación con hábitos
-    habitos = relationship("Habit", back_populates="usuario", cascade="all, delete-orphan")
 
-class Habit(Base):
-    __tablename__ = "habits"
+class Habito(Base):
+    __tablename__ = "habitos"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"))
-    pregunta = Column(String(255), nullable=False)
-    respuesta = Column(String(255), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"))
+    lavarse_cara = Column(String(50))
+    protector_solar = Column(String(50))
+    exfoliacion = Column(String(50))
+    tipo_piel = Column(String(50))
+    objetivo = Column(String(100))
+    edad = Column(Integer)
 
-    # Relación inversa hacia el usuario
     usuario = relationship("User", back_populates="habitos")
-# ----------------------
-# Esquemas Pydantic
+
 # ----------------------
 class HabitoCreate(BaseModel):
     nombre: str
