@@ -1,4 +1,4 @@
-#!/home/lunahcujar/Descargas/Proyecto_Integrador-master/venv/bin/python3
+#!/home/lunahcujar/PycharmProjects/Proyecto_Integrador/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

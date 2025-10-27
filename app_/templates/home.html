@@ -4,20 +4,22 @@
 
 {% block content %}
 <style>
+    /* Hero principal */
     .hero {
-        background: linear-gradient(to right, #f8e1e7, #ffffff);
+        background: linear-gradient(135deg, #f9e1e7, #ffffff);
         color: #7a4054;
-        padding: 50px 30px;
+        padding: 80px 30px;
         text-align: center;
         border-radius: 20px;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-        margin-bottom: 40px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        margin-bottom: 60px;
+        animation: fadeIn 1s ease-in-out;
     }
 
     .hero h1 {
-        font-size: 2.8em;
-        font-weight: 600;
-        margin-bottom: 10px;
+        font-size: 3em;
+        font-weight: 700;
+        margin-bottom: 15px;
     }
 
     .hero p {
@@ -25,73 +27,24 @@
         color: #944b64;
     }
 
-    .features {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 30px;
-        margin-top: 30px;
-    }
-
-    .card {
-        background-color: #ffffff;
-        border: 2px solid #f2d7df;
-        border-radius: 16px;
-        padding: 25px;
-        width: 260px;
-        text-align: center;
-        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.03);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.08);
-    }
-
-    .card img {
-        width: 80px;
-        height: 80px;
-        object-fit: contain;
-        margin-bottom: 15px;
-    }
-
-    .card h3 {
-        font-size: 1.3em;
-        margin-bottom: 8px;
-        color: #a85d74;
-    }
-
-    .card p {
-        font-size: 0.95em;
-        color: #6b4a53;
-        margin-bottom: 12px;
-    }
-
-    .card a {
-        color: #dfa9bb;
-        text-decoration: none;
-        font-weight: bold;
-        font-size: 0.9em;
-    }
-
-    .card a:hover {
-        text-decoration: underline;
-        color: #c67c99;
-    }
-
     .highlight-img {
         display: block;
-        margin: 40px auto 0;
-        max-width: 100%;
+        margin: 50px auto;
+        max-width: 90%;
         height: auto;
-        border-radius: 16px;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease;
     }
 
+    .highlight-img:hover {
+        transform: scale(1.03);
+    }
+
+    /* Secciones */
     .cuidados-section {
         background-color: #fff6f2;
-        padding: 50px 20px;
+        padding: 60px 20px;
         display: flex;
         justify-content: center;
         margin-top: 40px;
@@ -105,15 +58,26 @@
         gap: 40px;
     }
 
+    .cuidados-container:nth-child(even) {
+        flex-direction: row-reverse; /* alternar */
+    }
+
     .cuidados-img img {
         width: 100%;
         max-width: 450px;
         border-radius: 20px;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .cuidados-img img:hover {
+        transform: scale(1.05);
+        transition: transform 0.3s ease;
     }
 
     .cuidados-texto {
         max-width: 500px;
+        animation: slideUp 0.8s ease forwards;
     }
 
     .cuidados-texto h2 {
@@ -129,46 +93,43 @@
         margin-bottom: 25px;
     }
 
+    /* Botones */
     .btn-destacado {
         display: inline-block;
-        padding: 12px 25px;
-        background-color: #ffa7a7;
+        padding: 14px 28px;
+        background: linear-gradient(90deg, #ff9eaa, #ff7b7b);
         color: white;
-        border-radius: 25px;
+        border-radius: 30px;
         text-decoration: none;
         font-weight: bold;
-        transition: background 0.3s ease;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(255, 123, 123, 0.3);
     }
 
     .btn-destacado:hover {
-        background-color: #ff9191;
+        background: linear-gradient(90deg, #ff7b7b, #ff5e78);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(255, 123, 123, 0.4);
+    }
+
+    /* Animaciones */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>
 
 <div class="hero">
     <h1>Bienvenida a tu espacio de cuidado personal</h1>
-    <p>Descubre productos, registra hábitos y mejora la salud de tu piel con estilo.</p>
+    <p>Descubre tu rutina perfecta y mejora la salud de tu piel con estilo.</p>
 </div>
 
-<div class="features">
-    <div class="card">
-        <a href="/productos">
-            <img src="static/img/products.png" alt="Descubrir productos">
-            <h3>Explorar Productos</h3>
-            <p>Encuentra los mejores productos según tu tipo de piel.</p>
-        </a>
-    </div>
-
-    <div class="card">
-        <a href="/usuarios">
-            <img src="static/img/register.png" alt="Registrar usuario">
-            <h3>Nuestros usuarios</h3>
-            <p>Crea tu cuenta y obtén recomendaciones personalizadas.</p>
-        </a>
-    </div>
-</div>
-
-<!-- Nueva sección añadida -->
+<!-- Sección Rutina -->
 <section class="cuidados-section">
     <div class="cuidados-container">
         <div class="cuidados-img">
@@ -180,10 +141,30 @@
                 Cuidar tu piel puede ser sencillo y agradable. Encuentra productos y hábitos adaptados a tu tipo de piel y estilo de vida.
                 ¡Empieza hoy mismo tu transformación!
             </p>
-            <a href="/rutina" class="btn-destacado">Explorar hábitos</a>
+            <a href="/test_habitos" class="btn-destacado">Cuéntanos sobre ti</a>
         </div>
     </div>
 </section>
 
+<!-- Sección Plan de seguimiento IA -->
+<section class="cuidados-section">
+    <div class="cuidados-container">
+        <div class="cuidados-img">
+            <img src="/static/img/derma.jpeg" alt="IA Dermatología" />
+        </div>
+        <div class="cuidados-texto">
+            <h2>Plan de seguimiento con <span style="color:#a85d74;">AyudaMe Dermatología</span></h2>
+            <p>
+                Nuestra inteligencia artificial actúa como tu dermatólogo virtual, ofreciéndote un plan de seguimiento personalizado.
+                Podrás resolver dudas, recibir consejos y hacer un monitoreo constante de tu piel con el apoyo de la IA.
+            </p>
+            <a href="/seguimiento" class="btn-destacado">Comenzar seguimiento</a>
+        </div>
+    </div>
+</section>
+
+<!-- Imagen final -->
 <img src="/static/img/tipos-de-pieles-scaled.jpeg" class="highlight-img" alt="Tipos de piel">
+
 {% endblock %}
+

@@ -1,206 +1,261 @@
 {% extends "base.html" %}
-
 {% block title %}Test de Hábitos{% endblock %}
 
 {% block content %}
 <style>
-    .quiz-container {
-        max-width: 900px;
-        margin: 3rem auto;
-        padding: 3rem;
-        background: #fff6f9;
-        border-radius: 20px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-
-    .quiz-step {
-        display: none;
-        flex-direction: column;
-        align-items: center;
-        gap: 2rem;
-    }
-
-    .quiz-step.active {
+    body {
+        background: linear-gradient(135deg, #ffdee9, #b5fffc);
+        min-height: 100vh;
         display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Poppins', sans-serif;
     }
 
-    .quiz-step img {
-        width: 250px;
-        border-radius: 1.5rem;
-        object-fit: cover;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-        transition: transform 0.3s;
+    .quiz-container {
+        width: 90%;
+        max-width: 900px;
+        background: #ffffffd9;
+        border-radius: 25px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        overflow: hidden;
+        text-align: center;
+        padding: 3rem 2rem;
+        animation: fadeIn 0.8s ease-in-out;
     }
 
-    .quiz-step img:hover {
-        transform: scale(1.05);
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
-    .quiz-step label {
-        font-size: 1.5rem;
-        font-weight: 600;
+    h2 {
+        color: #ff4081;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    p {
+        font-size: 1.4rem;
         color: #333;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
     }
 
-    .quiz-step select {
-        padding: 14px;
+    .step { display: none; flex-direction: column; align-items: center; gap: 1.5rem; }
+    .step.active { display: flex; }
+
+    .question-image {
+        width: 180px;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 50%;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .option {
+        padding: 15px;
+        border: 2px solid #ddd;
+        border-radius: 15px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.3s;
         font-size: 1.1rem;
-        border-radius: 10px;
-        border: 1px solid #bbb;
-        width: 60%;
+        width: 100%;
+    }
+
+    .option:hover {
+        border-color: #ff69b4;
+        background: #fff0f6;
+        transform: scale(1.03);
+    }
+
+    .option.selected {
+        border-color: #ff69b4;
+        background: #ffe6f0;
+        font-weight: bold;
     }
 
     .quiz-button {
         margin-top: 2rem;
-        padding: 12px 35px;
-        background-color: #ff69b4;
+        padding: 14px 36px;
+        background: linear-gradient(135deg, #ff69b4, #ff85c1);
         color: white;
         border: none;
-        border-radius: 10px;
+        border-radius: 12px;
         cursor: pointer;
         font-size: 1.2rem;
-        transition: background-color 0.3s ease;
+        display: none;
+        transition: all 0.3s;
     }
 
     .quiz-button:hover {
-        background-color: #e6549a;
+        transform: scale(1.05);
+        background: linear-gradient(135deg, #ff4081, #ff6fb0);
     }
 
-    h2 {
-        font-size: 2rem;
-        margin-top: 2rem;
-        color: #c0392b;
+    input, button {
+        outline: none;
     }
 
-    @media screen and (max-width: 768px) {
-        .quiz-container {
-            padding: 2rem;
-        }
-
-        .quiz-step select {
-            width: 100%;
-        }
-
-        h2 {
-            font-size: 1.6rem;
-        }
+    form input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1.5px solid #ccc;
+        font-size: 1rem;
     }
+
+    form button {
+        background: #4CAF50;
+        color: white;
+        font-size: 1.2rem;
+        padding: 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    form button:hover {
+        background: #43a047;
+    }
+
 </style>
 
-<h2>Test de Hábitos de Cuidado de la Piel</h2>
-
 <div class="quiz-container">
-    <form id="habitsForm">
-        <div class="quiz-step active" data-step="0">
-            <img src="/static/img/lavado-cara.jpg" alt="Lavado de cara">
-            <label for="lavado">¿Te lavas la cara dos veces al día?</label>
-            <select id="lavado" name="lavado" required>
-                <option value="">Seleccione</option>
-                <option value="si">Sí</option>
-                <option value="no">No</option>
-            </select>
-        </div>
+    <h2>💖 Test de Hábitos de Cuidado Facial 💖</h2>
 
-        <div class="quiz-step" data-step="1">
-            <img src="/static/img/protector-solar.jpg" alt="Protector solar">
-            <label for="bloqueador">¿Usas protector solar diariamente?</label>
-            <select id="bloqueador" name="bloqueador" required>
-                <option value="">Seleccione</option>
-                <option value="si">Sí</option>
-                <option value="no">No</option>
-            </select>
+    <!-- Paso 1 -->
+    <div class="step active" data-step="1">
+        <img src="/static/img/lavarse-cara.jpg" class="question-image" alt="Lavar el rostro">
+        <p>1️⃣ ¿Te lavas la cara todos los días?</p>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="option" data-value="Sí">Sí</div>
+            <div class="option" data-value="No">No</div>
         </div>
+        <button class="quiz-button">Siguiente</button>
+    </div>
 
-        <div class="quiz-step" data-step="2">
-            <img src="/static/img/exfoliacion.jpg" alt="Exfoliación">
-            <label for="exfoliacion">¿Con qué frecuencia exfolias tu piel?</label>
-            <select id="exfoliacion" name="exfoliacion" required>
-                <option value="">Seleccione</option>
-                <option value="nunca">Nunca</option>
-                <option value="1_vez">1 vez por semana</option>
-                <option value="2_veces">2 veces por semana</option>
-                <option value="diario">A diario</option>
-            </select>
+    <!-- Paso 2 -->
+    <div class="step" data-step="2">
+        <img src="/static/img/protector-solar.jpg" class="question-image" alt="Protector solar">
+        <p>2️⃣ ¿Usas protector solar?</p>
+        <div class="grid grid-cols-3 gap-4">
+            <div class="option" data-value="Siempre">Siempre</div>
+            <div class="option" data-value="A veces">A veces</div>
+            <div class="option" data-value="Nunca">Nunca</div>
         </div>
+        <button class="quiz-button">Siguiente</button>
+    </div>
 
-        <button type="button" class="quiz-button" id="nextBtn">Siguiente</button>
-    </form>
+    <!-- Paso 3 -->
+    <div class="step" data-step="3">
+        <img src="/static/img/exfoliacion.jpg" class="question-image" alt="Exfoliación facial">
+        <p>3️⃣ ¿Con qué frecuencia te exfolias?</p>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="option" data-value="1 vez por semana">1 vez por semana</div>
+            <div class="option" data-value="2 o más veces por semana">2 o más veces por semana</div>
+            <div class="option" data-value="Rara vez">Rara vez</div>
+        </div>
+        <button class="quiz-button">Siguiente</button>
+    </div>
+
+    <!-- Paso 4 -->
+    <div class="step" data-step="4">
+        <img src="/static/img/tipos-piel.jpg" class="question-image" alt="Tipos de piel">
+        <p>4️⃣ ¿Cómo describirías tu tipo de piel?</p>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="option" data-value="Grasa">Grasa</div>
+            <div class="option" data-value="Seca">Seca</div>
+            <div class="option" data-value="Mixta">Mixta</div>
+            <div class="option" data-value="Sensible">Sensible</div>
+        </div>
+        <button class="quiz-button">Siguiente</button>
+    </div>
+
+    <!-- Paso 5 -->
+    <div class="step" data-step="5">
+        <img src="/static/img/cuidado-piel-objetivos.jpg" class="question-image" alt="Objetivos de cuidado facial">
+        <p>5️⃣ ¿Cuál es tu objetivo principal?</p>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="option" data-value="Controlar el acné">Controlar el acné</div>
+            <div class="option" data-value="Reducir manchas">Reducir manchas</div>
+            <div class="option" data-value="Prevenir arrugas">Prevenir arrugas</div>
+            <div class="option" data-value="Mantener hidratación">Mantener hidratación</div>
+        </div>
+        <button class="quiz-button">Finalizar</button>
+    </div>
+
+    <!-- Paso 6 -->
+    <div class="step" data-step="6">
+        <img src="/static/img/registro-usuario.jpg" class="question-image" alt="Registro de usuario">
+        <p>💚 Completa tus datos para guardar tu perfil 💚</p>
+        <form id="registerForm" class="space-y-3">
+            <input type="text" name="name" placeholder="Tu nombre completo" required>
+            <input type="email" name="mail" placeholder="Correo electrónico" required>
+            <button type="submit">Registrar y ver mi rutina 💫</button>
+        </form>
+    </div>
 </div>
 
 <script>
-const steps = document.querySelectorAll('.quiz-step');
-let currentStep = 0;
-const nextBtn = document.getElementById("nextBtn");
+let currentStep = 1;
+const totalSteps = 6;
+let respuestas = {};
 
-nextBtn.addEventListener("click", () => {
-    const currentSelect = steps[currentStep].querySelector("select");
-    if (!currentSelect.value) {
-        alert("Por favor selecciona una opción.");
-        return;
-    }
+document.querySelectorAll(".option").forEach(opt => {
+    opt.addEventListener("click", () => {
+        const parent = opt.closest(".step");
+        parent.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+        opt.classList.add("selected");
 
-    // Si estamos en el último paso, guarda los hábitos
-    if (currentStep === steps.length - 1) {
-        guardarHabitos();
-        return;
-    }
+        const stepNumber = parent.getAttribute("data-step");
+        respuestas[`pregunta_${stepNumber}`] = opt.dataset.value;
 
-    // Mostrar siguiente paso
-    steps[currentStep].classList.remove("active");
-    currentStep++;
-
-    if (currentStep < steps.length) {
-        steps[currentStep].classList.add("active");
-
-        if (currentStep === steps.length - 1) {
-            nextBtn.textContent = "Finalizar";
-        }
-    }
+        const btn = parent.querySelector(".quiz-button");
+        if (btn) btn.style.display = "inline-block";
+    });
 });
 
-async function guardarHabitos() {
-    const user_id = localStorage.getItem("user_id");
-    const email = localStorage.getItem("user_email");
+document.querySelectorAll(".quiz-button").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove("active");
+        currentStep++;
+        if (currentStep <= totalSteps) {
+            document.querySelector(`.step[data-step="${currentStep}"]`).classList.add("active");
+        }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+});
 
-    if (!user_id || !email) {
-        alert("No se encontró el usuario o el correo. Por favor regístrese primero.");
-        return;
-    }
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    const lavado = document.getElementById("lavado")?.value;
-    const bloqueador = document.getElementById("bloqueador")?.value;
-    const exfoliacion = document.getElementById("exfoliacion")?.value;
-
-    if (!lavado || !bloqueador || !exfoliacion) {
-        alert("Por favor completa todas las respuestas del test.");
-        return;
-    }
-
-    const habitos = [
-        { name: "lavado", frequency: lavado, user_id: parseInt(user_id) },
-        { name: "bloqueador", frequency: bloqueador, user_id: parseInt(user_id) },
-        { name: "exfoliacion", frequency: exfoliacion, user_id: parseInt(user_id) }
-    ];
+    const data = {
+        name: e.target.name.value,
+        mail: e.target.mail.value,
+        quiz: respuestas
+    };
 
     try {
-        const response = await fetch("/api/habitos", {
+        const response = await fetch("/api/usuarios", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(habitos)
+            body: JSON.stringify(data)
         });
 
+        const result = await response.json();
         if (response.ok) {
-            // Redirige directamente a calcular la rutina
-            window.location.href = `/rutina?email=${encodeURIComponent(email)}`;
+            alert("✅ Usuario registrado correctamente con sus hábitos.");
+            window.location.href = "/rutina";
         } else {
-            const error = await response.json();
-            alert("Error al guardar los hábitos: " + (error.detail || "Intenta más tarde."));
+            alert("❌ " + result.detail);
         }
     } catch (err) {
         console.error(err);
-        alert("Error de conexión con el servidor.");
+        alert("⚠️ Error de conexión con el servidor");
     }
-}
+});
 </script>
 {% endblock %}

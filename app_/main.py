@@ -1,198 +1,46 @@
-import os
-
-import app
 from dotenv import load_dotenv
-from fastapi import FastAPI
-from fastapi import HTTPException
-from fastapi.params import Depends
-from sqlalchemy import Boolean
-from fastapi import status
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from fastapi import Depends
-from sqlalchemy.orm import Session
-from starlette.responses import JSONResponse
-from fastapi import Depends
-from starlette.staticfiles import StaticFiles
-
-from app_.habit_operations import *
-from app_.models import *
-
-from typing import List
-from contextlib import asynccontextmanager
-from app_.products import Base
-from app_.dbconnection import AsyncSessionLocal, get_db
-from typing import Annotated
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app_.user_operations import *
-from app_.products_operations import *
-from app_.create_tables import  *
-from app_.products import *
-
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from app_.templates.routes import router
-from app_.templates.routes import router as views_router
-from supabase import create_client, Client
-load_dotenv()
-app = FastAPI()
 
-# Montar carpeta estática
+from app_.core.dbconnection import get_db
+from app_.templates.routes import router as views_router
+
+# Cargar variables de entorno (.env)
+load_dotenv()
+
+# Crear la aplicación FastAPI
+app = FastAPI(title="Sistema de Cuidado de la Piel", version="1.0")
+
+# Montar carpeta estática para imágenes, CSS y JS
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-
-# Incluir las rutas
+# Incluir las rutas HTML (home, registro, test_habitos, etc.)
 app.include_router(views_router)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# ========================================
+# EVENTO DE INICIO
+# ========================================
 
-
-
-#bnuevos cambios
-#nueos cambiossss
-
-@app.on_event("startup")
-async def startup():
-    # Crear las tablas cuando la aplicación inicie
-    await create_tables()
-
-# Aquí van tus rutas y otras configuraciones de FastAPI
-@app.get("/")
-async def read_root():
-    return {"message": "Hello World!"}
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
-
-#user
-
-# Crear usuario
-
-@app.post("/user", response_model=UserWithId)
-async def create_user(user: UpdatedUser, db: AsyncSession = Depends(get_db)):
-    try:
-        new_user_instance = await new_user(user.name, user.mail, user.type_skin, user.preferences, db)
-        return new_user_instance
-    except Exception as e:
-        print(f"❌ Error al crear usuario: {e}")
-        raise HTTPException(status_code=500, detail="Error interno al crear usuario")
-
-
-#update_by_name
-@app.put("/user/by-name/{name}", response_model=UserWithId)
-async def update_user_by_name(
-    name: str,
-    user_update: UpdatedUser,
-    db: AsyncSession = Depends(get_db)
-):
-    updated = await modify_user_by_name(name, user_update.dict(exclude_unset=True), db)
-    if not updated:
-        raise HTTPException(status_code=404, detail="User not found")
-    return updated
-
-#show_all_users
-@app.get("/allusers", response_model=List[UserWithId])
-async def show_all_users(db: AsyncSession = Depends(get_db)):
-    return await read_all_users(db)
-
-@app.delete("/user/{user_id}", response_model=UserWithId)
-async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
-    deleted_user = await remove_user_by_id(user_id, db)
-    if not deleted_user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return deleted_user
-
-"""""
-#products
-
-
-# Endpoint para crear un producto
-@app_.post("/products/", response_model=ProductWithId)
-async def create_product_view(p: ProductCreate, db: AsyncSession = Depends(get_db)):
-    db_product = await create_product(db=db, p=p)
-    return db_product
-
-# Endpoint para obtener todos los productos
-@app_.get("/products/", response_model=list[ProductWithId])
-async def get_all_products_view(db: AsyncSession = Depends(get_db)):
-    return await get_all_products(db=db)
-
-# Endpoint para obtener un producto por nombre
-@app_.get("/products/{product_name}", response_model=ProductWithId)
-async def get_product_by_name_view(product_name: str, db: AsyncSession = Depends(get_db)):
-    product = await get_product_by_name(db=db, product_name=product_name)
-    if product is None:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return product
-
-# Endpoint para actualizar un producto
-@app_.put("/products/{product_name}", response_model=ProductWithId)
-async def update_product_view(product_name: str, updated_data: UpdatedProduct, db: AsyncSession = Depends(get_db)):
-    updated = await update_product(db=db, product_name=product_name, updated_data=updated_data.dict())
-    if updated is None:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return updated
-
-# Endpoint para eliminar un producto
-@app_.delete("/products/{product_name}", response_model=ProductWithId)
-async def delete_product_view(product_name: str, db: AsyncSession = Depends(get_db)):
-    deleted = await delete_product(db=db, product_name=product_name)
-    if deleted is None:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return deleted
-"""
-
-#habits
-#create habit
-@app.post("/habits/", response_model=HabitWithId)
-async def create_habit(habit: UpdatedHabit, db: AsyncSession = Depends(get_db)):
-    try:
-        new_habit_instance = await new_habit(habit.name, habit.frequency, habit.user_id, db)
-        return new_habit_instance  # ✅ sin paréntesis
-    except Exception as e:
-        print(f"❌ Error al crear habito: {e}")
-        raise HTTPException(status_code=500, detail="Error interno al crear habito")
-
-
-# Obtener todos los hábitos
-@app.get("/habits/", response_model=list[HabitWithId])
-async def get_all_habits(db: AsyncSession = Depends(get_db)):
-    return await read_all_habits(db)
-
-# Actualizar hábito por ID
-@app.put("/habits/{habit_id}", response_model=HabitWithId)
-async def update_habit_by_id(habit_id: int, updated_data: UpdatedHabit, db: AsyncSession = Depends(get_db)):
-    try:
-        updated = await modify_habit_by_id(habit_id, updated_data.dict(exclude_unset=True), db)
-        return updated
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        print(f"❌ Error al actualizar hábito: {e}")
-        raise HTTPException(status_code=500, detail="Error interno al actualizar hábito")
-
-# Eliminar hábito por nombre
-@app.delete("/habits/{habit_name}", response_model=HabitWithId)
-async def remove_habit(habit_name: str, db: AsyncSession = Depends(get_db)):
-    try:
-        deleted = await delete_habit_by_name(habit_name, db)
-        if deleted:
-            return deleted
-        raise HTTPException(status_code=404, detail="Hábito no encontrado")
-    except Exception as e:
-        print(f"❌ Error al eliminar hábito: {e}")
-        raise HTTPException(status_code=500, detail="Error interno al eliminar hábito")
-
-
-
+# ========================================
+# MANEJO GLOBAL DE ERRORES
+# ========================================
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request,exc):
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Personaliza los mensajes de error HTTP."""
     return JSONResponse(
         status_code=exc.status_code,
         content={
-            "message":"Carambas, algo fallo",
-            "detail":exc.detail,
-            "path":request.url.path
+            "message": "Carambas, algo falló 😅",
+            "detail": exc.detail,
+            "path": str(request.url),
         },
     )
+
+# ========================================
+# RUTA RAÍZ POR DEFECTO (opcional)
+# ========================================
+@app.get("/")
+async def root():
+    """Redirige al home.html o muestra un mensaje simple."""
+    return {"message": "Bienvenido a la API del Sistema de Cuidado de la Piel 💆‍♀️"}
