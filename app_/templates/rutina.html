@@ -56,6 +56,16 @@
         display: inline-block;
     }
 
+    .rutina-descripcion {
+        color: #555;
+        font-size: 0.95rem;
+        margin-top: 0.5rem;
+        background: #fff6f8;
+        padding: 0.8rem;
+        border-left: 4px solid #e75480;
+        border-radius: 6px;
+    }
+
     .rutina-paso {
         display: flex;
         align-items: flex-start;
@@ -136,20 +146,33 @@ async function verificarUsuario() {
             return;
         }
 
-        // Crear sección de Rutina de Mañana
+        // Rutina de Mañana
         if (data.manana && data.manana.length > 0) {
             const secManana = document.createElement("div");
             secManana.className = "rutina-section";
-            secManana.innerHTML = "<h3>🌞 Rutina de Mañana</h3>";
+            secManana.innerHTML = `
+                <h3>🌞 Rutina de Mañana</h3>
+                <p class="rutina-descripcion">
+                    Empieza tu día limpiando tu rostro para eliminar impurezas acumuladas durante la noche.
+                    Luego hidrata tu piel para mantenerla fresca y protegida,
+                    y finaliza con bloqueador solar para prevenir el envejecimiento prematuro.
+                </p>
+            `;
             data.manana.forEach(prod => secManana.appendChild(crearCardProducto(prod)));
             contenedor.appendChild(secManana);
         }
 
-        // Crear sección de Rutina de Noche
+        // Rutina de Noche
         if (data.noche && data.noche.length > 0) {
             const secNoche = document.createElement("div");
             secNoche.className = "rutina-section";
-            secNoche.innerHTML = "<h3>🌙 Rutina de Noche</h3>";
+            secNoche.innerHTML = `
+                <h3>🌙 Rutina de Noche</h3>
+                <p class="rutina-descripcion">
+                    Por la noche, tu piel se regenera. Limpia tu rostro para eliminar maquillaje y contaminantes,
+                    exfolia suavemente si corresponde y aplica hidratante para nutrirla mientras descansas.
+                </p>
+            `;
             data.noche.forEach(prod => secNoche.appendChild(crearCardProducto(prod)));
             contenedor.appendChild(secNoche);
         }
@@ -171,7 +194,7 @@ function crearCardProducto(p) {
     info.innerHTML = `
         <h4>${p.product_name}</h4>
         <p><strong>Tipo:</strong> ${p.product_type}</p>
-        <p><strong>Ingredientes:</strong> ${p.clean_ingreds?.slice(0, 100) || 'N/A'}...</p>
+        <p><strong>Ingredientes:</strong> ${(p.clean_ingreds?.slice(0, 80) || 'N/A')}...</p>
         <p><a href="${p.product_url}" target="_blank" style="color:#e75480;">Ver producto</a></p>
     `;
 

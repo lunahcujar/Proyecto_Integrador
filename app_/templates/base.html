@@ -26,7 +26,7 @@
             background-color: #f8e1e7;
             padding: 0.8rem 2rem;
             display: flex;
-            justify-content: space-between;
+            justify-content: center; /* centramos el logo */
             align-items: center;
             flex-wrap: wrap;
             gap: 1.5rem;
@@ -42,40 +42,32 @@
             display: flex;
             align-items: center;
             gap: 0.8rem;
+            cursor: pointer;
+            text-decoration: none;
         }
 
         nav .logo img {
-            height: 70px;     /* tamaño grande */
-            width: auto;      /* mantiene proporción */
+            height: 70px;
+            width: auto;
             border-radius: 50%;
             object-fit: contain;
             filter: contrast(1.2) brightness(1.1);
+            transition: transform 0.2s ease;
+        }
+
+        nav .logo img:hover {
+            transform: scale(1.05);
         }
 
         nav .logo span {
             font-weight: 700;
             color: #a85d74;
-            font-size: 1.5rem; /* texto más grande */
+            font-size: 1.6rem;
+            transition: color 0.3s ease;
         }
 
-        /* Enlaces */
-        nav .links {
-            display: flex;
-            gap: 1.5rem;
-        }
-
-        nav .links a {
-            text-decoration: none;
-            color: #a85d74;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: color 0.3s, border-bottom 0.3s;
-            padding-bottom: 3px;
-        }
-
-        nav .links a:hover {
+        nav .logo span:hover {
             color: #7a4054;
-            border-bottom: 2px solid #7a4054;
         }
 
         main {
@@ -99,10 +91,6 @@
                 flex-direction: column;
                 align-items: center;
             }
-            nav .links {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
             main {
                 padding: 1rem;
             }
@@ -111,21 +99,16 @@
 </head>
 <body>
     <nav>
-        <div class="logo">
+        <a href="/" class="logo">
             <img src="{{ url_for('static', path='img/logo.png') }}" alt="Cuidado de la Piel">
             <span>Cuidado de la Piel</span>
-        </div>
-        <div class="links">
-            <a href="/login">Login</a>
-            <a href="/signup">Sign in</a>
-        </div>
+        </a>
     </nav>
 
     <main>
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Bloque para scripts personalizados -->
     {% block scripts %}{% endblock %}
 
     <footer>
