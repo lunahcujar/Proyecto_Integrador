@@ -1,17 +1,21 @@
-from dotenv import load_dotenv
 import os
-from supabase import create_client, Client
+from supabase import create_client
 
-load_dotenv()  # Cargar las variables del .env
+# ==============================
+# Inicialización segura de Supabase
+# ==============================
 
-# Obtener las variables por su NOMBRE, no por su valor
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET")
 
-# Validar que no estén vacías
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise ValueError("❌ SUPABASE_URL o SUPABASE_KEY no están definidos.")
+supabase = None
 
-# Crear cliente Supabase
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+try:
+    if SUPABASE_URL and SUPABASE_KEY:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("✅ Supabase inicializado correctamente")
+    else:
+        print("⚠️ Variables de entorno de Supabase no configuradas.")
+except Exception as e:
+    print(f"💥 Error al inicializar Supabase: {e}")
+    supabase = None
