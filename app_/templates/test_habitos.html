@@ -258,7 +258,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
     e.preventDefault();
     const data = {
         name: e.target.name.value,
-        mail: e.target.mail.value,
+        email: e.target.mail.value, // debe coincidir con tu endpoint
         quiz: respuestas
     };
 
@@ -272,7 +272,10 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
         const result = await response.json();
         if (response.ok) {
             alert("✅ Usuario registrado correctamente con sus hábitos.");
-            window.location.href = "/rutina";
+
+            // Redirigir al perfil usando la URL del email
+            window.location.href = `/perfil?email=${encodeURIComponent(data.email)}&mostrar_rutina=true`;
+
         } else {
             alert("❌ " + result.detail);
         }

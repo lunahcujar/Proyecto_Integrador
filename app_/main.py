@@ -5,7 +5,8 @@ from fastapi.staticfiles import StaticFiles
 
 from app_.core.dbconnection import get_db
 from app_.templates.routes import router as views_router
-
+from sqlalchemy import inspect
+from app_.core.dbconnection import engine
 # Cargar variables de entorno (.env)
 load_dotenv()
 
@@ -18,6 +19,13 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Incluir las rutas HTML (home, registro, test_habitos, etc.)
 app.include_router(views_router)
 
+from app_.core.dbconnection import create_async_engine
+@app.get("/check-tables")
+async def check_tables():
+    async with create_async_engine() as conn:
+        # Aquí usamos run_sync para inspeccionar
+        tables = await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names())
+        return {"tables": tables}
 # ========================================
 # EVENTO DE INICIO
 # ========================================

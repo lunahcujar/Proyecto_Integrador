@@ -1,192 +1,209 @@
-{% extends "base.html" %}
-
-{% block title %}Registro de Usuario{% endblock %}
-
-{% block content %}
-<style>
-    .registro-container {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        padding: 3rem 2rem;
-        gap: 3rem;
-        flex-wrap: wrap;
-        background-color: #f9f9f9;
-    }
-
-    .registro-img {
-        width: 100%;
-        max-width: 500px;
-        border-radius: 1.5rem;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        object-fit: cover;
-    }
-
-    .formulario {
-        background-color: #ffffff;
-        padding: 2.5rem;
-        border-radius: 1.2rem;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-        width: 100%;
-        max-width: 450px;
-        animation: slideUp 0.8s ease-in-out;
-    }
-
-    .formulario h2 {
-        text-align: center;
-        color: #a85d74;
-        margin-bottom: 1.8rem;
-    }
-
-    .formulario label {
-        font-weight: 500;
-        color: #444;
-        display: block;
-        margin-top: 1rem;
-    }
-
-    .formulario input,
-    .formulario select {
-        width: 100%;
-        padding: 0.75rem;
-        margin-top: 0.4rem;
-        border-radius: 10px;
-        border: 1px solid #ccc;
-        font-size: 1rem;
-    }
-
-    .formulario input[type="checkbox"] {
-        width: auto;
-        margin-right: 0.5rem;
-    }
-
-    .formulario button {
-        background-color: #a85d74;
-        color: white;
-        padding: 0.9rem;
-        margin-top: 1.5rem;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        width: 100%;
-        font-size: 1rem;
-        font-weight: bold;
-        transition: background-color 0.3s ease;
-    }
-
-    .formulario button:hover {
-        background-color: #94455f;
-    }
-
-    #mensajeExito {
-        display: none;
-        text-align: center;
-        background-color: #e6f7e6;
-        color: #2d7a2d;
-        font-weight: bold;
-        border: 2px solid #a8e6a8;
-        border-radius: 10px;
-        padding: 1rem;
-        margin: 1rem auto;
-        width: 90%;
-        max-width: 500px;
-        animation: fadeIn 0.8s ease-in-out;
-    }
-
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil del Usuario</title>
+    <style>
+        body {
+            font-family: "Poppins", sans-serif;
+            background-color: #f7f3ff;
+            color: #333;
+            margin: 0;
+            padding: 0;
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
+
+        header {
+            background-color: #b97cf7;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 600;
         }
-    }
 
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
+        main {
+            max-width: 700px;
+            margin: 30px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
-        to {
-            opacity: 1;
+
+        h2 {
+            text-align: center;
+            color: #5e2bb8;
         }
-    }
-</style>
 
-<div class="registro-container">
-    <img src="/static/img/BLOG-LIMPIEZA-FACIAL-1005x800.jpg" alt="Cuidados de la piel" class="registro-img">
-
-    <form id="formularioRegistro" class="formulario" enctype="multipart/form-data">
-        <h2>Registro de Usuario</h2>
-
-        <label for="name">Nombre:</label>
-        <input type="text" id="name" name="name" required>
-
-        <label for="mail">Correo electrónico:</label>
-        <input type="email" id="mail" name="mail" required>
-
-        <label for="type_skin">Tipo de piel:</label>
-        <select id="type_skin" name="type_skin" required>
-            <option value="">Seleccione</option>
-            <option value="seca">Seca</option>
-            <option value="grasa">Grasa</option>
-            <option value="mixta">Mixta</option>
-            <option value="normal">Normal</option>
-        </select>
-
-        <label for="photo">Foto de perfil:</label>
-        <input type="file" id="photo" name="photo" accept="image/*">
-
-        <label>
-            <input type="checkbox" id="preferences" name="preferences">
-            Acepto recibir recomendaciones personalizadas
-        </label>
-
-        <button type="submit">Registrarse</button>
-    </form>
-</div>
-
-<div id="mensajeExito">✅ Usuario registrado correctamente.</div>
-
-<script>
-document.getElementById("formularioRegistro").addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const formData = new FormData();
-    formData.append("name", e.target.name.value);
-    formData.append("mail", e.target.mail.value);
-    formData.append("type_skin", e.target.type_skin.value);
-    formData.append("preferences", e.target.preferences.checked);
-    formData.append("photo", e.target.photo.files[0]);
-
-    try {
-        const response = await fetch("/api/usuarios", {
-            method: "POST",
-            body: formData
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            localStorage.setItem("user_id", result.id);
-
-            const mensaje = document.getElementById("mensajeExito");
-            mensaje.style.display = "block";
-
-            // Redirigir a /rutina después de mostrar el mensaje
-            setTimeout(() => {
-                window.location.href = "/rutina";
-            }, 3000);
-        } else {
-            alert("Error al registrar usuario: " + (result.detail || "Revisa los campos"));
+        .perfil-info {
+            margin-bottom: 20px;
         }
-    } catch (error) {
-        alert("Error de conexión con el servidor.");
-    }
-});
-</script>
 
+        .perfil-info p {
+            font-size: 16px;
+            margin: 6px 0;
+        }
 
-{% endblock %}
+        .botones-acciones {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+        }
+
+        button {
+            background-color: #a66df0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #8d4ce0;
+            transform: scale(1.05);
+        }
+
+        .habitos {
+            margin-top: 20px;
+            background-color: #f0e6ff;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .habitos h3 {
+            color: #5e2bb8;
+        }
+    </style>
+</head>
+<body>
+    <header>✨ Perfil del Usuario ✨</header>
+
+    <main>
+        <h2>Bienvenid@, {{ usuario.nombre }}</h2>
+
+        <div class="perfil-info">
+            <p><strong>Correo:</strong> {{ usuario.correo }}</p>
+
+            {% if habitos and habitos|length > 0 %}
+                <p><strong>Tipo de piel:</strong> {{ habitos[0].tipo_piel or "No registrado" }}</p>
+            {% else %}
+                <p><strong>Tipo de piel:</strong> No registrado</p>
+            {% endif %}
+        </div>
+
+        <div class="habitos">
+            <h3>💧 Tus hábitos registrados:</h3>
+
+            {% if habitos and habitos|length > 0 %}
+                <ul>
+                    {% for h in habitos %}
+                        <li><strong>¿Te lavas la cara?</strong> {{ h.lavarse_cara or "No especificado" }}</li>
+                        <li><strong>¿Usas protector solar?</strong> {{ h.protector_solar or "No especificado" }}</li>
+                        <li><strong>Frecuencia de exfoliación:</strong> {{ h.exfoliacion or "No especificado" }}</li>
+                        <li><strong>Objetivo:</strong> {{ h.objetivo or "No especificado" }}</li>
+                        <li><strong>Edad:</strong> {{ h.edad or "No registrada" }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No tienes hábitos registrados todavía.</p>
+            {% endif %}
+        </div>
+
+        <div class="rutina">
+            <h3>💆‍♀️ Tu rutina personalizada:</h3>
+
+            <h4>☀️ Rutina de Mañana</h4>
+            <div id="rutinaManana" class="productos" style="display: none;"></div>
+
+            <h4>🌙 Rutina de Noche</h4>
+            <div id="rutinaNoche" class="productos" style="display: none;"></div>
+
+            <p id="loading">Cargando rutina...</p>
+        </div>
+
+        <div id="acciones" class="section">
+            <div class="botones-acciones">
+                <button onclick="editarUsuario()">✏️ Editar Perfil</button>
+                <button onclick="eliminarUsuario()">🗑️ Eliminar Perfil</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const email = "{{ usuario.correo }}";
+
+        async function cargarRutina() {
+            try {
+                const response = await fetch(`/api/rutina?email=${encodeURIComponent(email)}`);
+                const data = await response.json();
+
+                document.getElementById("loading").style.display = "none";
+
+                mostrarProductos(data.manana || [], "rutinaManana");
+                mostrarProductos(data.noche || [], "rutinaNoche");
+
+                if ((data.manana || []).length === 0 && (data.noche || []).length === 0) {
+                    document.getElementById("loading").innerText = "⚠️ No hay productos recomendados para tu rutina.";
+                    document.getElementById("loading").style.display = "block";
+                }
+            } catch (error) {
+                console.error("Error al cargar rutina:", error);
+                document.getElementById("loading").innerText = "❌ Error al obtener tu rutina personalizada.";
+            }
+        }
+
+        function mostrarProductos(productos, contenedorId) {
+            const container = document.getElementById(contenedorId);
+            container.innerHTML = "";
+            if (!productos || productos.length === 0) {
+                container.style.display = "none";
+                return;
+            }
+
+            productos.forEach(p => {
+                const card = document.createElement("div");
+                card.classList.add("producto");
+                card.innerHTML = `
+                    <img src="${p.image_url || '/static/default.png'}" alt="${p.nombre}">
+                    <h4>${p.nombre}</h4>
+                    <p>${p.descripcion}</p>
+                    <p><strong>Uso:</strong> ${p.mini_desc || "Sigue las instrucciones del producto"}</p>
+                `;
+                container.appendChild(card);
+            });
+
+            container.style.display = "grid";
+        }
+
+        function editarUsuario() {
+            alert("🧾 Aquí podrás implementar el formulario de edición del perfil.");
+        }
+
+        async function eliminarUsuario() {
+            if (!confirm("¿Estás segura de que deseas eliminar tu perfil? Esta acción no se puede deshacer.")) return;
+
+            try {
+                const response = await fetch(`/api/eliminar_usuario?email=${encodeURIComponent(email)}`, {
+                    method: "DELETE",
+                });
+
+                if (response.ok) {
+                    alert("Perfil eliminado correctamente 🗑️");
+                    window.location.href = "/";
+                } else {
+                    alert("Error al eliminar el perfil ❌");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Error en la conexión con el servidor.");
+            }
+        }
+
+        // ✅ Cargar la rutina automáticamente al abrir el perfil
+        document.addEventListener("DOMContentLoaded", cargarRutina);
+    </script>
+</body>

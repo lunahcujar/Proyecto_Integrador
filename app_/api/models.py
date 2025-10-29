@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, JSON, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, JSON, Float, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from pydantic import BaseModel
@@ -25,7 +25,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(100), nullable=False)
     correo = Column(String(120), unique=True, nullable=False)
-    habitos = relationship("Habito", back_populates="usuario", cascade="all, delete-orphan")
+    habitos = relationship("Habito", back_populates="usuario")
+    rutinas = relationship("Rutina", back_populates="usuario")
 
 
 class Habito(Base):
@@ -41,6 +42,25 @@ class Habito(Base):
     edad = Column(Integer)
 
     usuario = relationship("User", back_populates="habitos")
+
+
+
+class Producto(Base):
+    __tablename__ = "productos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_name = Column(String(150), nullable=False)
+    product_url = Column(String(255), nullable=True)
+    product_type = Column(String(100), nullable=False)
+    clean_ingreds = Column(String(500), nullable=True)
+    price = Column(Float, nullable=False)
+    image_url = Column(String(255), nullable=True)
+    skin_type = Column(String(100), nullable=True)
+
+    rutinas = relationship("RutinaProducto", back_populates="producto")
+
+    def __repr__(self):
+        return f"<Producto(id={self.id}, name={self.product_name}, type={self.product_type}, price={self.price})>"
 
 # ----------------------
 class HabitoCreate(BaseModel):
@@ -63,19 +83,19 @@ class HabitoCreate(BaseModel):
     respuestas: Dict[str, str]
 
 
+class Rutina(Base):
+    __tablename__ = "rutinas"
+    id = Column(Integer, primary_key=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    habito_id = Column(Integer, ForeignKey("habitos.id"))
+    usuario = relationship("User", back_populates="rutinas")
+    productos = relationship("RutinaProducto", back_populates="rutina")
 
-class Producto(Base):
-    __tablename__ = "productos"
+class RutinaProducto(Base):
+    __tablename__ = "rutina_productos"
+    id = Column(Integer, primary_key=True)
+    rutina_id = Column(Integer, ForeignKey("rutinas.id"))
+    producto_id = Column(Integer, ForeignKey("productos.id"))
 
-    id = Column(Integer, primary_key=True, index=True)
-    product_name = Column(String(150), nullable=False)
-    product_url = Column(String(255), nullable=True)
-    product_type = Column(String(100), nullable=False)
-    clean_ingreds = Column(String(500), nullable=True)
-    price = Column(Float, nullable=False)
-    image_url = Column(String(255), nullable=True)
-    skin_type = Column(String(100), nullable=True)
-
-    def __repr__(self):
-        return f"<Producto(id={self.id}, name={self.product_name}, type={self.product_type}, price={self.price})>"
-
+    rutina = relationship("Rutina", back_populates="productos")
+    producto = relationship("Producto", back_populates="rutinas")

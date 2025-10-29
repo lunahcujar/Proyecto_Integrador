@@ -1,52 +1,33 @@
-# app_/tests/test_usuarios.py
-from fastapi.testclient import TestClient
+import pytest
+from httpx import AsyncClient
 from app_.main import app
 from app_.core.dbconnection import get_db
-from unittest.mock import AsyncMock
 
-import pytest
+@pytest.mark.asyncio
+async def test_registrar_usuario(async_session):
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        data = {
+            "name": "Luna Test",
+            "email": "luna_test@example.com",
+            "quiz": {
+                "pregunta_1": "sí",
+                "pregunta_2": "no",
+                "pregunta_3": "1 vez por semana",
+                "pregunta_4": "seca",
+                "pregunta_5": "hidratar",
+                "pregunta_6": "25"
+            }
+        }
+        response = await ac.post("/api/usuarios", json=data)
+        assert response.status_code == 200
+        result = response.json()
+        assert "Usuario y hábitos registrados" in result["message"]
 
-json_data = {
-    "name": "Prueba",
-    "mail": "testuser@example.com",
-    "quiz": {
-        "pregunta_1": True,
-        "pregunta_2": False,
-        "pregunta_3": "1 vez/semana",
-        "pregunta_4": "seca",
-        "pregunta_5": "hidratar",
-        "pregunta_6": "25"
-    }
-}
-
-# --- Mock DB ---
-class MockDB:
-    def __init__(self):
-        self.add = AsyncMock()
-        self.commit = AsyncMock()
-        self.flush = AsyncMock()
-        self.close = AsyncMock()
-        # Simula que no hay usuario existente
-        self.execute = AsyncMock()
-        self.execute.return_value.scalar_one_or_none = AsyncMock(return_value=None)
-
-@pytest.fixture
-def override_get_db():
-    async def _mock_get_db():
-        db = MockDB()
-        try:
-            yield db
-        finally:
-            await db.close()
-    return _mock_get_db
-
-def test_registrar_usuario(override_get_db):
-    # Override de la DB
-    app.dependency_overrides = {}
-    app.dependency_overrides[get_db] = override_get_db
-
-    client = TestClient(app)
-    response = client.post("/api/usuarios", json=json_data)
-    assert response.status_code == 200
-    json_resp = response.json()
-    assert "usuario" in json_resp["message"].lower()
+@pytest.mark.asyncio
+async def test_obtener_usuario(async_session):
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        email = "luna_test@example.com"
+        response = await ac.get(f"/api/usuarios?email={email}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["correo"] == email

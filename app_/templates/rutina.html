@@ -1,206 +1,181 @@
-{% extends "base.html" %}
-
-{% block title %}Tu Rutina Personalizada{% endblock %}
-
-{% block content %}
-<style>
-    .rutina-container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 2rem;
-        background: #fff0f5;
-        border-radius: 1rem;
-        box-shadow: 0 4px 15px rgba(230, 120, 150, 0.3);
-        text-align: center;
-    }
-
-    .email-form input {
-        width: 70%;
-        padding: 0.8rem;
-        margin-bottom: 1rem;
-        border-radius: 0.75rem;
-        border: 1px solid #f2a2b3;
-        font-size: 1rem;
-    }
-
-    .email-form button {
-        padding: 0.8rem 1.5rem;
-        background-color: #e75480;
-        color: white;
-        border: none;
-        border-radius: 1rem;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-
-    .email-form button:hover {
-        background-color: #d23b65;
-    }
-
-    h2 {
-        color: #e75480;
-        margin-bottom: 1.5rem;
-    }
-
-    .rutina-section {
-        margin-top: 2rem;
-        text-align: left;
-    }
-
-    .rutina-section h3 {
-        background: #f8c6d8;
-        color: #fff;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        display: inline-block;
-    }
-
-    .rutina-descripcion {
-        color: #555;
-        font-size: 0.95rem;
-        margin-top: 0.5rem;
-        background: #fff6f8;
-        padding: 0.8rem;
-        border-left: 4px solid #e75480;
-        border-radius: 6px;
-    }
-
-    .rutina-paso {
-        display: flex;
-        align-items: flex-start;
-        gap: 15px;
-        margin-top: 1rem;
-        background: #fff;
-        border-radius: 12px;
-        border: 1px solid #f8c6d8;
-        padding: 1rem;
-        box-shadow: 0 2px 5px rgba(255, 182, 193, 0.3);
-        transition: transform 0.2s ease;
-    }
-
-    .rutina-paso:hover {
-        transform: translateY(-4px);
-    }
-
-    .rutina-paso img {
-        width: 100px;
-        height: 100px;
-        border-radius: 10px;
-        border: 2px solid #f2a2b3;
-        object-fit: cover;
-    }
-
-    .rutina-paso h4 {
-        margin: 0;
-        color: #e75480;
-    }
-
-    .rutina-paso p {
-        margin: 4px 0;
-        color: #555;
-        font-size: 0.9rem;
-    }
-
-    .no-datos {
-        text-align: center;
-        font-style: italic;
-        color: #999;
-    }
-
-</style>
-
-<div class="rutina-container">
-    <h2>✨ Tu Rutina Personalizada de Cuidado Facial ✨</h2>
-
-    <div class="email-form">
-        <input type="email" id="email" placeholder="Ingresa tu correo electrónico" value="{{ request.query_params.email or '' }}">
-        <br>
-        <button type="button" onclick="verificarUsuario()">Ver mi rutina</button>
-    </div>
-
-    <div id="contenedor-rutina">
-        <p class="no-datos">Esperando datos...</p>
-    </div>
-</div>
-
-<script>
-async function verificarUsuario() {
-    const email = document.getElementById("email").value.trim();
-    const contenedor = document.getElementById("contenedor-rutina");
-    if (!email) {
-        contenedor.innerHTML = "<p class='no-datos'>Por favor, ingresa un correo válido.</p>";
-        return;
-    }
-
-    contenedor.innerHTML = "<p class='no-datos'>Buscando información...</p>";
-
-    try {
-        const resp = await fetch(`/api/rutina?email=${encodeURIComponent(email)}`);
-        const data = await resp.json();
-
-        contenedor.innerHTML = "";
-
-        if (!data || (!data.manana && !data.noche)) {
-            contenedor.innerHTML = "<p class='no-datos'>No se pudo generar tu rutina. Asegúrate de haber realizado el test de hábitos.</p>";
-            return;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rutina Personalizada</title>
+    <style>
+        body {
+            font-family: "Poppins", sans-serif;
+            background-color: #f7f3ff;
+            margin: 0;
+            padding: 0;
+            color: #333;
         }
 
-        // Rutina de Mañana
-        if (data.manana && data.manana.length > 0) {
-            const secManana = document.createElement("div");
-            secManana.className = "rutina-section";
-            secManana.innerHTML = `
-                <h3>🌞 Rutina de Mañana</h3>
-                <p class="rutina-descripcion">
-                    Empieza tu día limpiando tu rostro para eliminar impurezas acumuladas durante la noche.
-                    Luego hidrata tu piel para mantenerla fresca y protegida,
-                    y finaliza con bloqueador solar para prevenir el envejecimiento prematuro.
-                </p>
-            `;
-            data.manana.forEach(prod => secManana.appendChild(crearCardProducto(prod)));
-            contenedor.appendChild(secManana);
+        header {
+            background-color: #b97cf7;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 22px;
+            font-weight: 600;
         }
 
-        // Rutina de Noche
-        if (data.noche && data.noche.length > 0) {
-            const secNoche = document.createElement("div");
-            secNoche.className = "rutina-section";
-            secNoche.innerHTML = `
-                <h3>🌙 Rutina de Noche</h3>
-                <p class="rutina-descripcion">
-                    Por la noche, tu piel se regenera. Limpia tu rostro para eliminar maquillaje y contaminantes,
-                    exfolia suavemente si corresponde y aplica hidratante para nutrirla mientras descansas.
-                </p>
-            `;
-            data.noche.forEach(prod => secNoche.appendChild(crearCardProducto(prod)));
-            contenedor.appendChild(secNoche);
+        main {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
-    } catch (err) {
-        console.error(err);
-        contenedor.innerHTML = "<p class='no-datos'>Error al cargar rutina.</p>";
-    }
-}
+        h2 {
+            text-align: center;
+            color: #5e2bb8;
+            margin-bottom: 20px;
+        }
 
-function crearCardProducto(p) {
-    const card = document.createElement("div");
-    card.className = "rutina-paso";
+        .productos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
 
-    const img = document.createElement("img");
-    img.src = p.image_url || "/static/img/default-product.png";
+        .producto {
+            background-color: #f0e6ff;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
 
-    const info = document.createElement("div");
-    info.innerHTML = `
-        <h4>${p.product_name}</h4>
-        <p><strong>Tipo:</strong> ${p.product_type}</p>
-        <p><strong>Ingredientes:</strong> ${(p.clean_ingreds?.slice(0, 80) || 'N/A')}...</p>
-        <p><a href="${p.product_url}" target="_blank" style="color:#e75480;">Ver producto</a></p>
-    `;
+        .producto:hover {
+            transform: scale(1.05);
+        }
 
-    card.appendChild(img);
-    card.appendChild(info);
-    return card;
-}
-</script>
-{% endblock %}
+        .producto img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .producto h4 {
+            color: #5e2bb8;
+            margin: 10px 0 5px;
+        }
+
+        .producto p {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .botones {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .botones button {
+            background-color: #a66df0;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+
+        .botones button:hover {
+            background-color: #8d4ce0;
+        }
+
+        #loading {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <header>💜 Tu Rutina Personalizada</header>
+
+    <main>
+        <h2>Recomendaciones para ti</h2>
+
+        <div id="loading">Cargando tu rutina, por favor espera...</div>
+
+        <div id="rutinaContainer" class="productos" style="display: none;"></div>
+
+        <div class="botones">
+            <button onclick="volverPerfil()">← Volver a mi perfil</button>
+            <button onclick="window.location.href='/'">🏠 Inicio</button>
+        </div>
+    </main>
+
+    <script>
+        // 🔍 Obtener el parámetro 'email' desde la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const email = urlParams.get("email");
+
+        async function cargarRutina() {
+            if (!email) {
+                document.getElementById("loading").innerText = "❌ No se encontró el correo del usuario.";
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/rutina?email=${encodeURIComponent(email)}`);
+
+                if (!response.ok) {
+                    throw new Error("No se pudo obtener la rutina.");
+                }
+
+                const data = await response.json();
+                mostrarRutina(data);
+            } catch (error) {
+                console.error(error);
+                document.getElementById("loading").innerText = "❌ Error al cargar la rutina.";
+            }
+        }
+
+        function mostrarRutina(rutina) {
+            const container = document.getElementById("rutinaContainer");
+            container.innerHTML = "";
+            document.getElementById("loading").style.display = "none";
+            container.style.display = "grid";
+
+            if (!rutina || rutina.length === 0) {
+                container.innerHTML = "<p>No se encontraron recomendaciones disponibles.</p>";
+                return;
+            }
+
+            rutina.forEach(producto => {
+                const card = document.createElement("div");
+                card.classList.add("producto");
+
+                card.innerHTML = `
+                    <img src="${producto.image_url || '/static/default.png'}" alt="${producto.nombre}">
+                    <h4>${producto.nombre}</h4>
+                    <p>${producto.descripcion}</p>
+                    <p><strong>Uso:</strong> ${producto.uso}</p>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function volverPerfil() {
+            window.location.href = `/perfil?email=${encodeURIComponent(email)}`;
+        }
+
+        // 🚀 Ejecutar al cargar la página
+        window.onload = cargarRutina;
+    </script>
+</body>
+</html>
