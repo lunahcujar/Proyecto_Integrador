@@ -1,6 +1,6 @@
 import pytest
 from httpx import AsyncClient
-from app_.main import app
+from main import app
 
 @pytest.mark.asyncio
 async def test_obtener_habitos_usuario(async_session):

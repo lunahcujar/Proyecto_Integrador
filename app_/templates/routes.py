@@ -1,68 +1,83 @@
+import csv
+import unicodedata
+from random import random
+
 from fastapi import (
-    APIRouter, Request, Depends, Form, File, UploadFile, HTTPException
+    APIRouter, Request, Depends, Form, File, UploadFile, HTTPException, Query
 )
 from fastapi.responses import HTMLResponse
-from sqlalchemy import inspect, select
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
+from uuid import uuid4
 import os
-from unidecode import unidecode
 
+# Modelos y conexión
 from app_.api.models import User, Habito, Producto, Rutina, RutinaProducto
-from app_.core.dbconnection import get_db, engine
+from app_.core.dbconnection import get_db
 from app_.core.supabase_config import supabase
-from supabase import create_client
 
+# =====================================================
+# Inicialización del router y plantillas
+# =====================================================
 router = APIRouter()
 templates = Jinja2Templates(directory="app_/templates")
 
-# ==============================
-# Páginas HTML
-# ==============================
+# =====================================================
+# RUTAS HTML
+# =====================================================
 @router.get("/", response_class=HTMLResponse, tags=["Páginas"])
 async def home(request: Request):
     return templates.TemplateResponse("home.html", {"request": request})
+
 
 @router.get("/test_habitos", response_class=HTMLResponse, tags=["Páginas"])
 async def test_habitos(request: Request):
     return templates.TemplateResponse("test_habitos.html", {"request": request})
 
+
 @router.get("/rutina", response_class=HTMLResponse, tags=["Páginas"])
 async def rutina(request: Request):
     return templates.TemplateResponse("rutina.html", {"request": request})
 
+
 @router.get("/perfil", response_class=HTMLResponse, tags=["Páginas"])
 async def perfil(request: Request, email: str, db: AsyncSession = Depends(get_db)):
-    # Buscar usuario
+    """
+    Carga el perfil del usuario con sus hábitos y productos de rutina.
+    """
     result = await db.execute(select(User).where(User.correo == email))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    # Buscar hábitos
+
     result_habitos = await db.execute(select(Habito).where(Habito.usuario_id == user.id))
     habitos = result_habitos.scalars().all()
-    # Buscar rutina y productos
+
     productos = []
     result_rutina = await db.execute(select(Rutina).where(Rutina.usuario_id == user.id))
     rutina = result_rutina.scalars().first()
     if rutina:
         result_productos = await db.execute(
-            select(Producto).join(RutinaProducto).where(RutinaProducto.rutina_id == rutina.id)
+            select(Producto)
+            .join(RutinaProducto)
+            .where(RutinaProducto.rutina_id == rutina.id)
         )
         productos = result_productos.scalars().all()
+
     return templates.TemplateResponse(
         "users.html",
         {"request": request, "usuario": user, "habitos": habitos, "productos": productos}
     )
 
-# ==============================
-# Usuarios
-# ==============================
-@router.post("/api/usuarios", tags=["Usuarios"], summary="Registrar un usuario")
+# =====================================================
+# USUARIOS
+# =====================================================
+@router.post("/api/usuarios", tags=["Usuarios"])
 async def registrar_usuario(request: Request, db: AsyncSession = Depends(get_db)):
     """
-    Registra un nuevo usuario y sus hábitos.
+    Registra un nuevo usuario junto con sus hábitos iniciales.
     """
     data = await request.json()
     nombre = data.get("name") or data.get("nombre")
@@ -93,52 +108,20 @@ async def registrar_usuario(request: Request, db: AsyncSession = Depends(get_db)
     db.add(habit_data)
     await db.commit()
 
-    return {"message": "Usuario y hábitos registrados correctamente", "id": nuevo_usuario.id, "email": correo}
+    return {"message": "Usuario y hábitos registrados correctamente", "email": correo}
 
-@router.put("/api/usuarios/{user_id}", tags=["Usuarios"], summary="Actualizar usuario")
-async def actualizar_usuario(user_id: int, request: Request, db: AsyncSession = Depends(get_db)):
-    data = await request.json()
-    usuario = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    usuario.nombre = data.get("name", usuario.nombre)
-    usuario.correo = data.get("mail", usuario.correo)
-    await db.commit()
-    await db.refresh(usuario)
-    return {"message": "Usuario actualizado", "usuario": usuario}
 
-@router.delete("/api/usuarios/{user_id}", tags=["Usuarios"], summary="Eliminar usuario")
-async def eliminar_usuario(user_id: int, db: AsyncSession = Depends(get_db)):
-    usuario = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    await db.delete(usuario)
-    await db.commit()
-    return {"message": "Usuario eliminado"}
-
-@router.get("/api/usuarios", tags=["Usuarios"], summary="Obtener usuario por correo")
+@router.get("/api/usuarios", tags=["Usuarios"])
 async def obtener_usuario(email: str, db: AsyncSession = Depends(get_db)):
     usuario = (await db.execute(select(User).where(User.correo == email))).scalar_one_or_none()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return {"id": usuario.id, "nombre": usuario.nombre, "correo": usuario.correo}
 
-# ==============================
-# Hábitos
-# ==============================
-@router.get("/api/habitos/usuario/{usuario_id}", tags=["Hábitos"], summary="Obtener hábitos de un usuario")
-async def obtener_habitos(usuario_id: int, db: AsyncSession = Depends(get_db)):
-    habitos = (await db.execute(select(Habito).where(Habito.usuario_id == usuario_id))).scalars().all()
-    if not habitos:
-        raise HTTPException(status_code=404, detail="No hay hábitos registrados")
-    return [{"lavarse_cara": h.lavarse_cara, "protector_solar": h.protector_solar,
-             "exfoliacion": h.exfoliacion, "tipo_piel": h.tipo_piel,
-             "objetivo": h.objetivo, "edad": h.edad} for h in habitos]
-
-# ==============================
-# Productos
-# ==============================
-@router.post("/api/productos", tags=["Productos"], summary="Crear un producto")
+# =====================================================
+# PRODUCTOS
+# =====================================================
+@router.post("/api/productos", tags=["Productos"])
 async def crear_producto(request: Request, db: AsyncSession = Depends(get_db)):
     data = await request.json()
     producto = Producto(**data)
@@ -147,64 +130,206 @@ async def crear_producto(request: Request, db: AsyncSession = Depends(get_db)):
     await db.refresh(producto)
     return {"message": "Producto creado", "producto_id": producto.id}
 
-@router.get("/api/productos/{producto_id}", tags=["Productos"], summary="Leer un producto")
+
+@router.get("/api/productos/{producto_id}", tags=["Productos"])
 async def leer_producto(producto_id: int, db: AsyncSession = Depends(get_db)):
     producto = (await db.execute(select(Producto).where(Producto.id == producto_id))).scalars().first()
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return producto
 
-@router.put("/api/productos/{producto_id}", tags=["Productos"], summary="Actualizar producto")
-async def actualizar_producto(producto_id: int, request: Request, db: AsyncSession = Depends(get_db)):
-    data = await request.json()
-    producto = (await db.execute(select(Producto).where(Producto.id == producto_id))).scalars().first()
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-    for key, value in data.items():
-        setattr(producto, key, value)
-    await db.commit()
-    await db.refresh(producto)
-    return {"message": "Producto actualizado", "producto": producto}
 
-@router.delete("/api/productos/{producto_id}", tags=["Productos"], summary="Eliminar producto")
-async def eliminar_producto(producto_id: int, db: AsyncSession = Depends(get_db)):
-    producto = (await db.execute(select(Producto).where(Producto.id == producto_id))).scalars().first()
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-    await db.delete(producto)
-    await db.commit()
-    return {"message": "Producto eliminado"}
-
-@router.get("/api/productos/usuario/{usuario_id}", tags=["Productos"], summary="Productos recomendados para un usuario")
-async def obtener_productos_usuario(usuario_id: int, db: AsyncSession = Depends(get_db)):
-    habito = (await db.execute(select(Habito).where(Habito.usuario_id == usuario_id))).scalars().first()
-    if not habito or not habito.tipo_piel:
-        raise HTTPException(status_code=404, detail="No hay hábitos o tipo de piel definido")
-    global supabase
-    if not supabase:
-        supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
-    resp = supabase.table("productos").select("*").eq("skin_type", habito.tipo_piel).execute()
-    productos = resp.data or []
-    return [{"id": p.get("id"), "product_name": p.get("product_name"),
-             "product_type": p.get("product_type"), "clean_ingreds": p.get("clean_ingreds"),
-             "product_url": p.get("product_url"), "image_url": p.get("image_url")} for p in productos]
-
-# ==============================
-# Rutina
-# ==============================
-@router.get("/api/rutina", tags=["Rutina"], summary="Generar rutina personalizada")
+# =====================================================
+# RUTINA PERSONALIZADA
+# =====================================================
+@router.post("/api/generar_rutina", tags=["Rutina"], summary="Generar rutina personalizada y guardarla")
 async def generar_rutina(email: str, db: AsyncSession = Depends(get_db)):
-    # (Aquí puedes pegar tu endpoint corregido de rutina que te pasé antes)
-    ...
-
-# ==============================
-# Comprobación de tablas
-# ==============================
-@router.get("/check-tables", tags=["Debug"], summary="Verificar tablas en DB")
-async def check_tables():
+    """
+    Genera una rutina personalizada para el usuario según sus hábitos y tipo de piel.
+    Guarda la rutina y los productos asociados.
+    """
     try:
-        async with engine.connect() as conn:
-            tables = await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names())
-        return {"tables": tables}
+        # 🔹 Buscar usuario
+        usuario = (await db.execute(select(User).where(User.correo == email))).scalar_one_or_none()
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        # 🔹 Verificar si ya tiene una rutina creada
+        rutina_existente = (await db.execute(select(Rutina).where(Rutina.usuario_id == usuario.id))).scalar_one_or_none()
+        if rutina_existente:
+            await db.delete(rutina_existente)
+            await db.commit()
+
+        # 🔹 Crear nueva rutina
+        nueva_rutina = Rutina(usuario_id=usuario.id)
+        db.add(nueva_rutina)
+        await db.commit()
+        await db.refresh(nueva_rutina)
+
+        # 🔹 Obtener todos los productos disponibles
+        productos = (await db.execute(select(Producto))).scalars().all()
+        if not productos:
+            raise HTTPException(status_code=404, detail="No hay productos disponibles para generar rutina")
+
+        from random import shuffle
+        # 🔹 Seleccionar aleatoriamente productos de distintos tipos
+        shuffle(productos)
+        productos_seleccionados = productos[:6]  # Escoge hasta 6 productos aleatorios
+
+        # 🔹 Asociar los productos seleccionados a la rutina
+        for producto in productos_seleccionados:
+            asociacion = RutinaProducto(rutina_id=nueva_rutina.id, producto_id=producto.id)
+            db.add(asociacion)
+
+        await db.commit()
+
+        return {
+            "mensaje": "Rutina generada y guardada exitosamente",
+            "usuario": usuario.correo,
+            "productos_asociados": [
+                {
+                    "id": p.id,
+                    "nombre": p.product_name,
+                    "descripcion": p.product_type,
+                    "tipo_piel": p.skin_type,
+                    "precio": p.price,
+                    "imagen": p.image_url
+                }
+                for p in productos_seleccionados
+            ]
+        }
+
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=f"Error al generar rutina: {str(e)}")
+
+
+def normalizar(texto: str) -> str:
+    """
+    Convierte a minúsculas y elimina acentos para comparaciones.
+    """
+    return unicodedata.normalize('NFKD', texto).encode('ASCII', 'ignore').decode().lower()
+
+@router.get("/api/rutina", tags=["Rutina"], summary="Obtener rutina personalizada del usuario")
+async def obtener_rutina_usuario(email: str, db: AsyncSession = Depends(get_db)):
+    try:
+        # 🔹 Buscar usuario
+        usuario = (await db.execute(select(User).where(User.correo == email))).scalar_one_or_none()
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        # 🔹 Buscar rutina asociada
+        rutina = (await db.execute(select(Rutina).where(Rutina.usuario_id == usuario.id))).scalar_one_or_none()
+        if not rutina:
+            raise HTTPException(status_code=404, detail="No se encontró rutina para este usuario")
+
+        # 🔹 Obtener los productos asociados a la rutina
+        productos = (await db.execute(
+            select(Producto)
+            .join(RutinaProducto, Producto.id == RutinaProducto.producto_id)
+            .where(RutinaProducto.rutina_id == rutina.id)
+        )).scalars().all()
+
+        if not productos:
+            raise HTTPException(status_code=404, detail="No hay productos asociados a la rutina")
+
+        # 🔹 Organizar los productos según el momento del día
+        rutina_organizada = {
+            "mañana": [p for p in productos if any(x in normalizar(p.product_type) for x in ["bloqueador", "protector", "limpiador"])],
+            "tarde": [p for p in productos if any(x in normalizar(p.product_type) for x in ["tonico", "hidratante", "serum"])],
+            "noche": [p for p in productos if any(x in normalizar(p.product_type) for x in ["exfoliante", "mascarilla", "crema", "aceite"])],
+        }
+
+        # 🔹 Estructurar respuesta final
+        rutina_final = {
+            "usuario": usuario.correo,
+            "rutina_id": str(rutina.id),
+            "rutina": {
+                momento: [
+                    {
+                        "id": p.id,
+                        "nombre": p.product_name,
+                        "descripcion": p.product_type,
+                        "tipo_piel": p.skin_type,
+                        "precio": p.price,
+                        "imagen": p.image_url
+                    }
+                    for p in productos_list
+                ]
+                for momento, productos_list in rutina_organizada.items() if productos_list
+            }
+        }
+
+        return rutina_final
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interno: {e}")
+
+
+CSV_FILE = "/home/lunahcujar/PycharmProjects/Proyecto_Integrador/usuarios.csv"
+
+@router.put("/api/editar_usuario", tags=["Usuario"])
+async def editar_usuario(
+    correo: str = Query(..., description="Correo del usuario a editar"),
+    nombre: str | None = Form(None),
+    tipo_piel: str | None = Form(None),
+    edad: int | None = Form(None)
+):
+    if not os.path.exists(CSV_FILE):
+        raise HTTPException(status_code=404, detail="Archivo de usuarios no encontrado")
+
+    usuarios = []
+    encontrado = False
+
+    # Leer usuarios
+    with open(CSV_FILE, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row["correo"] == correo:
+                if nombre:
+                    row["nombre"] = nombre
+                if tipo_piel:
+                    row["tipo_piel"] = tipo_piel
+                if edad is not None:
+                    row["edad"] = str(edad)
+                encontrado = True
+            usuarios.append(row)
+
+    if not encontrado:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Guardar cambios
+    with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["id","nombre","correo","tipo_piel","edad"])
+        writer.writeheader()
+        writer.writerows(usuarios)
+
+    return {"mensaje": "Perfil actualizado correctamente", "correo": correo}
+
+
+@router.delete("/api/eliminar_usuario", tags=["Usuario"])
+async def eliminar_usuario(correo: str = Query(..., description="Correo del usuario a eliminar")):
+    if not os.path.exists(CSV_FILE):
+        raise HTTPException(status_code=404, detail="Archivo de usuarios no encontrado")
+
+    usuarios = []
+    eliminado = False
+
+    # Leer usuarios y filtrar
+    with open(CSV_FILE, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row["correo"] == correo:
+                eliminado = True
+                continue  # no lo agregamos, se elimina
+            usuarios.append(row)
+
+    if not eliminado:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Guardar cambios
+    with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["id","nombre","correo","tipo_piel","edad"])
+        writer.writeheader()
+        writer.writerows(usuarios)
+
+    return {"mensaje": "Usuario eliminado correctamente", "correo": correo}

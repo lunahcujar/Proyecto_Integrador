@@ -1,7 +1,7 @@
 import pytest
 from httpx import AsyncClient
-from app_.main import app
-from app_.core.dbconnection import get_db
+from main import app
+
 
 @pytest.mark.asyncio
 async def test_registrar_usuario(async_session):
