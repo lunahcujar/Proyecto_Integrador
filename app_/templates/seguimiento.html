@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Plan de Seguimiento{% endblock %}
+
+{% block content %}
+<style>
+    .ia-box {
+        background: #fff;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .chat-container {
+        max-height: 350px;
+        overflow-y: auto;
+        padding-right: 8px;
+    }
+    .msg-user {
+        background: #b6e9ff;
+        padding: 10px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        text-align: right;
+    }
+    .msg-ia {
+        background: #ffd3e0;
+        padding: 10px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+    }
+    .btn-send {
+        background: #ff6f91;
+        border: none;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    .btn-send:hover {
+        background: #ff537a;
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="ia-box">
+        <h2 class="mb-3">🌸 Plan de seguimiento con AyudaMe Dermatología</h2>
+
+        <p>
+            Nuestra inteligencia artificial actúa como tu dermatólogo virtual,
+            ofreciéndote un plan de seguimiento personalizado. Podrás resolver dudas,
+            recibir consejos y monitorear tu piel en tiempo real.
+        </p>
+
+        <hr>
+
+        <h4 class="mb-3">🤖 Asistente IA Dermatológico</h4>
+
+        <div class="chat-container" id="chatBox">
+            <!-- mensajes aparecen dinámicamente -->
+        </div>
+
+        <div class="d-flex mt-3">
+            <input type="text" id="userInput" class="form-control" placeholder="Escribe tu duda sobre tu piel...">
+            <button class="btn-send ms-2" onclick="enviarMensaje()">Enviar</button>
+        </div>
+
+        <p class="mt-3 text-muted">
+            💡 <b>Ejemplos:</b><br>
+            — “¿Cada cuánto debería exfoliarme?” <br>
+            — “Mi piel está muy seca, ¿qué hago?” <br>
+            — “¿Qué protector solar me recomiendas?”
+        </p>
+
+        <hr>
+
+        <h4>📅 Recordatorios de tu rutina</h4>
+        <ul>
+            <li>🌞 Mañana: limpieza + hidratante + protector solar</li>
+            <li>🌤️ Tarde: hidratación ligera</li>
+            <li>🌙 Noche: limpieza + crema nutritiva</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+async function enviarMensaje() {
+    const input = document.getElementById("userInput");
+    const chatBox = document.getElementById("chatBox");
+
+    const texto = input.value.trim();
+    if (texto === "") return;
+
+    // Mensaje del usuario
+    chatBox.innerHTML += `<div class="msg-user">${texto}</div>`;
+    input.value = "";
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    try {
+        // Llamada al backend
+        const response = await fetch("/api/seguimiento", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pregunta: texto })
+        });
+
+        const data = await response.json();
+
+        // Mostrar respuesta de IA
+        chatBox.innerHTML += `<div class="msg-ia">${data.respuesta}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+    } catch (error) {
+        chatBox.innerHTML += `<div class="msg-ia">⚠️ Error al conectar con la IA. Intenta nuevamente.</div>`;
+    }
+}
+</script>
+
+{% endblock %}

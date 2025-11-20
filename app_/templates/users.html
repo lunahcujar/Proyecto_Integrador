@@ -51,12 +51,6 @@
         <button onclick="eliminarUsuario()">🗑️ Eliminar Perfil</button>
     </div>
 
-    <!-- Productos recomendados -->
-    <div class="productos-recomendados">
-        <h3>🧴 Otros productos recomendados para ti</h3>
-        <div id="listaProductos" class="productos-grid"></div>
-        <p id="loadingProductos">Cargando productos recomendados...</p>
-    </div>
 </main>
 
 <style>
@@ -286,45 +280,6 @@ async function cargarRutinaExistente() {
     }
 }
 
-// ======== Cargar productos recomendados ========
-async function cargarProductos() {
-    const productosContainer = document.getElementById("listaProductos");
-    const loadingProductos = document.getElementById("loadingProductos");
-
-    loadingProductos.style.display = "block";
-    productosContainer.innerHTML = "";
-
-    try {
-        const response = await fetch(`/api/productos/usuario/{{ usuario.id }}`);
-        if (!response.ok) throw new Error("Error al obtener productos recomendados");
-
-        const productos = await response.json();
-        console.log("🧴 Productos recomendados:", productos);
-
-        if (productos.length === 0) {
-            loadingProductos.textContent = "No se encontraron productos recomendados para tu tipo de piel.";
-            return;
-        }
-
-        loadingProductos.style.display = "none";
-
-        productos.forEach(prod => {
-            const card = document.createElement("div");
-            card.classList.add("producto-card");
-            card.innerHTML = `
-                <img src="${prod.image_url || '/static/img/default-product.jpg'}" alt="${prod.product_name}" class="producto-img">
-                <h4>${prod.product_name}</h4>
-                <p><strong>Tipo:</strong> ${prod.product_type || "N/A"}</p>
-                <p><strong>Ingredientes:</strong> ${prod.clean_ingreds || "No especificados"}</p>
-                <a href="${prod.product_url}" target="_blank" class="btn-producto">Ver producto</a>
-            `;
-            productosContainer.appendChild(card);
-        });
-    } catch (error) {
-        console.error(error);
-        loadingProductos.textContent = "Error al cargar productos recomendados.";
-    }
-}
 
 async function editarUsuario() {
     const nombre = prompt("Nuevo nombre:");

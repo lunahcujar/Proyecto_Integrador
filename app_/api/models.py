@@ -91,3 +91,6 @@ class HabitoCreate(BaseModel):
 class UserUpdate(BaseModel):
     edad: Optional[int] = None
     foto_url: Optional[str] = None
+
+class Consulta(BaseModel):
+    pregunta: str

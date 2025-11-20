@@ -14,7 +14,7 @@ from uuid import uuid4
 import os
 
 # Modelos y conexión
-from app_.api.models import User, Habito, Producto, Rutina, RutinaProducto
+from app_.api.models import User, Habito, Producto, Rutina, RutinaProducto, Consulta
 from app_.core.dbconnection import get_db
 from app_.core.supabase_config import supabase
 
@@ -333,3 +333,16 @@ async def eliminar_usuario(correo: str = Query(..., description="Correo del usua
         writer.writerows(usuarios)
 
     return {"mensaje": "Usuario eliminado correctamente", "correo": correo}
+
+
+@router.post("/api/seguimiento")
+async def seguimiento_ia(data: Consulta):
+    pregunta = data.pregunta
+
+    respuesta = f"Esta es una respuesta de ejemplo para tu pregunta: {pregunta}"
+
+    return {"respuesta": respuesta}
+
+@router.get("/seguimiento")
+async def seguimiento(request: Request):
+    return templates.TemplateResponse("seguimiento.html", {"request": request})

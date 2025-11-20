@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 
-    <!-- SweetAlert2 -->
+    <!-- SweetAlert2 SOLO AQUÍ -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -26,7 +26,7 @@
             background-color: #f8e1e7;
             padding: 0.8rem 2rem;
             display: flex;
-            justify-content: center; /* centramos el logo */
+            justify-content: center;
             align-items: center;
             flex-wrap: wrap;
             gap: 1.5rem;
@@ -37,7 +37,6 @@
             z-index: 1000;
         }
 
-        /* Logo y texto */
         nav .logo {
             display: flex;
             align-items: center;
@@ -97,7 +96,9 @@
         }
     </style>
 </head>
+
 <body>
+
     <nav>
         <a href="/" class="logo">
             <img src="{{ url_for('static', path='img/logo.png') }}" alt="Cuidado de la Piel">
@@ -114,5 +115,6 @@
     <footer>
         &copy; 2025 Cuidado de la Piel. Todos los derechos reservados.
     </footer>
+
 </body>
 </html>

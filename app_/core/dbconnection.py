@@ -20,7 +20,12 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Conexión a la base de datos (Supabase Postgres)
-DATABASE_URL = "postgresql+asyncpg://postgres:Mi1familia234@db.lajsdmootdbzlnlyfeum.supabase.co:5432/postgres"
+DATABASE_URL = (
+    "postgresql+asyncpg://"
+    "postgres.lajsdmootdbzlnlyfeum:Mi1familia234"
+    "@aws-1-us-east-1.pooler.supabase.com:5432/postgres"
+)
+
 
 # Configurar SSL
 ssl_context = ssl.create_default_context()

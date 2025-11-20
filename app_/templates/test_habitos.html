@@ -256,9 +256,10 @@ document.querySelectorAll(".quiz-button").forEach(btn => {
 
 document.getElementById("registerForm").addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const data = {
         name: e.target.name.value,
-        email: e.target.mail.value, // debe coincidir con tu endpoint
+        email: e.target.mail.value,
         quiz: respuestas
     };
 
@@ -270,18 +271,46 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
         });
 
         const result = await response.json();
-        if (response.ok) {
-            alert("✅ Usuario registrado correctamente con sus hábitos.");
 
-            // Redirigir al perfil usando la URL del email
+        if (response.ok) {
+
+            // 🎉 ALERTA BONITA CON SWEETALERT2 🎉
+            await Swal.fire({
+                title: "🎉 ¡Registro exitoso! 🎉",
+                html: `
+                    ✨ Tu cuenta ha sido creada y tus hábitos quedaron guardados.<br><br>
+                    💪 <b>¡Estás a un paso de transformar tu rutina!</b><br><br>
+                    🚀 Te llevaremos a tu perfil personalizado ahora mismo.
+                `,
+                icon: "success",
+                confirmButtonText: "Ver mi rutina ✨",
+                confirmButtonColor: "#a85d74",
+                background: "#fffaf0",
+                color: "#7a4054",
+            });
+
+            // Redirección
             window.location.href = `/perfil?email=${encodeURIComponent(data.email)}&mostrar_rutina=true`;
 
         } else {
-            alert("❌ " + result.detail);
+
+            Swal.fire({
+                title: "❌ Error",
+                text: result.detail || "No se pudo registrar el usuario",
+                icon: "error",
+                confirmButtonColor: "#d33"
+            });
         }
+
     } catch (err) {
         console.error(err);
-        alert("⚠️ Error de conexión con el servidor");
+
+        Swal.fire({
+            title: "⚠️ Error de conexión",
+            text: "Hubo un problema comunicándose con el servidor.",
+            icon: "warning",
+            confirmButtonColor: "#f5a623"
+        });
     }
 });
 </script>
