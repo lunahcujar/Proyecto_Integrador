@@ -28,6 +28,13 @@
         border-radius: 12px;
         margin-bottom: 10px;
     }
+    .typing {
+        background: #ffe4ec;
+        padding: 8px;
+        border-radius: 10px;
+        font-style: italic;
+        opacity: 0.7;
+    }
     .btn-send {
         background: #ff6f91;
         border: none;
@@ -39,6 +46,23 @@
     .btn-send:hover {
         background: #ff537a;
     }
+    .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+    .chip {
+        background: #ffe0eb;
+        padding: 6px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        border: 1px solid #ffb6ca;
+    }
+    .chip:hover {
+        background: #ffcada;
+    }
 </style>
 
 <div class="container mt-5">
@@ -46,18 +70,22 @@
         <h2 class="mb-3">🌸 Plan de seguimiento con AyudaMe Dermatología</h2>
 
         <p>
-            Nuestra inteligencia artificial actúa como tu dermatólogo virtual,
-            ofreciéndote un plan de seguimiento personalizado. Podrás resolver dudas,
-            recibir consejos y monitorear tu piel en tiempo real.
+            Tu asistente dermatológico virtual te ayudará con recomendaciones, dudas
+            y seguimiento real de tu piel. ¡Escribe tu pregunta o sube tu foto cuando quieras!
         </p>
 
         <hr>
 
         <h4 class="mb-3">🤖 Asistente IA Dermatológico</h4>
 
-        <div class="chat-container" id="chatBox">
-            <!-- mensajes aparecen dinámicamente -->
+        <div class="chips">
+            <div class="chip" onclick="quickSend('¿Qué crema debería usar según mi tipo de piel?')">¿Crema ideal?</div>
+            <div class="chip" onclick="quickSend('Mi piel está muy seca últimamente')">Piel seca</div>
+            <div class="chip" onclick="quickSend('¿Qué protector solar me recomiendas?')">Protector solar</div>
+            <div class="chip" onclick="quickSend('Tengo granitos y no sé por qué')">Acné</div>
         </div>
+
+        <div class="chat-container" id="chatBox"></div>
 
         <div class="d-flex mt-3">
             <input type="text" id="userInput" class="form-control" placeholder="Escribe tu duda sobre tu piel...">
@@ -66,9 +94,9 @@
 
         <p class="mt-3 text-muted">
             💡 <b>Ejemplos:</b><br>
-            — “¿Cada cuánto debería exfoliarme?” <br>
-            — “Mi piel está muy seca, ¿qué hago?” <br>
-            — “¿Qué protector solar me recomiendas?”
+            — “¿Cada cuánto me exfolio?” <br>
+            — “Mi piel se pone roja con el sol” <br>
+            — “Recomiéndame una rutina completa”
         </p>
 
         <hr>
@@ -83,35 +111,50 @@
 </div>
 
 <script>
+const USER_ID = "{{ request.session.get('user_id', 'default_user') }}";
+// Si usas otra forma de manejar sesión, ajusto esto si quieres.
+
+function quickSend(text) {
+    document.getElementById("userInput").value = text;
+    enviarMensaje();
+}
+
 async function enviarMensaje() {
     const input = document.getElementById("userInput");
     const chatBox = document.getElementById("chatBox");
-
     const texto = input.value.trim();
-    if (texto === "") return;
+    if (!texto) return;
 
     // Mensaje del usuario
     chatBox.innerHTML += `<div class="msg-user">${texto}</div>`;
     input.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
 
+    // Indicador "escribiendo..."
+    const typingId = "typing-" + Date.now();
+    chatBox.innerHTML += `<div class="typing" id="${typingId}">La IA está escribiendo...</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
 
     try {
-        // Llamada al backend
-        const response = await fetch("/api/seguimiento", {
+        const formData = new FormData();
+        formData.append("user_id", USER_ID);
+        formData.append("message", texto);
+
+        const response = await fetch("/agent/chat", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pregunta: texto })
+            body: formData
         });
 
         const data = await response.json();
 
-        // Mostrar respuesta de IA
-        chatBox.innerHTML += `<div class="msg-ia">${data.respuesta}</div>`;
+        document.getElementById(typingId).remove();
+
+        chatBox.innerHTML += `<div class="msg-ia">${data.reply}</div>`;
         chatBox.scrollTop = chatBox.scrollHeight;
 
     } catch (error) {
-        chatBox.innerHTML += `<div class="msg-ia">⚠️ Error al conectar con la IA. Intenta nuevamente.</div>`;
+        document.getElementById(typingId).remove();
+        chatBox.innerHTML += `<div class="msg-ia">⚠️ Error al conectar con el agente. Intenta nuevamente.</div>`;
     }
 }
 </script>

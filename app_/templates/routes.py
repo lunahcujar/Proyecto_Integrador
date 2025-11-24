@@ -335,14 +335,97 @@ async def eliminar_usuario(correo: str = Query(..., description="Correo del usua
     return {"mensaje": "Usuario eliminado correctamente", "correo": correo}
 
 
-@router.post("/api/seguimiento")
-async def seguimiento_ia(data: Consulta):
-    pregunta = data.pregunta
-
-    respuesta = f"Esta es una respuesta de ejemplo para tu pregunta: {pregunta}"
-
-    return {"respuesta": respuesta}
-
 @router.get("/seguimiento")
 async def seguimiento(request: Request):
     return templates.TemplateResponse("seguimiento.html", {"request": request})
+
+@router.post("/api/seguimiento")
+async def seguimiento_ia_alias(data: Consulta):
+    respuesta = await dermatology_agent.chat("default_user", data.pregunta)
+    return {"respuesta": respuesta}
+
+from fastapi import APIRouter, UploadFile, File, Form
+from app_.ia_agent.agent import dermatology_agent
+from app_.ia_agent.memory import get_user_memory, update_user_memory
+
+
+router = APIRouter(prefix="/agent", tags=["Agente IA"])
+
+# -------------------------------------
+# 1. CHAT GENERAL (compatible con HTML)
+# -------------------------------------
+@router.post("/chat")
+async def chat_with_agent(
+    user_id: str = Form(...),
+    message: str = Form(...)
+):
+    # Recuperar historial previo
+    history = memory_db.get_history(user_id)
+
+    # Pedir respuesta al agente
+    response = await dermatology_agent.chat(user_id, message, history)
+
+    # Guardar conversación en memoria
+    memory_db.save_message(user_id, "user", message)
+    memory_db.save_message(user_id, "assistant", response)
+
+    return {"reply": response}
+
+
+# -------------------------------------
+# 2. ANALIZAR PIEL DESDE UNA IMAGEN
+# -------------------------------------
+@router.post("/skin-analysis")
+async def analyze_skin(
+    user_id: str = Form(...),
+    file: UploadFile = File(...)
+):
+    result = await dermatology_agent.analyze_skin(user_id, file)
+    return {"skin_condition": result}
+
+
+# -------------------------------------
+# 3. GENERAR RUTINA PERSONALIZADA
+# -------------------------------------
+@router.post("/routine")
+async def generate_routine(user_id: str = Form(...)):
+    routine = await dermatology_agent.create_routine(user_id)
+    return {"routine": routine}
+
+
+# -------------------------------------
+# 4. GUARDAR RESULTADOS DEL TEST DE PIEL
+# -------------------------------------
+@router.post("/save-test")
+async def save_test(
+    user_id: str = Form(...),
+    limpia: str = Form(...),
+    bloqueador: str = Form(...),
+    exfoliacion: str = Form(...)
+):
+    data = {
+        "lava_cara": limpia,
+        "usa_bloqueador": bloqueador,
+        "frecuencia_exfoliacion": exfoliacion
+    }
+
+    memory_db.save_test(user_id, data)
+    return {"message": "Test guardado", "data": data}
+
+
+# -------------------------------------
+# 5. OBTENER MEMORIA COMPLETA DEL USUARIO
+# -------------------------------------
+@router.get("/memory/{user_id}")
+async def get_user_memory(user_id: str):
+    return memory_db.get_full_memory(user_id)
+
+
+# -------------------------------------
+# 6. RESETEAR / BORRAR HISTORIAL DEL USUARIO
+# -------------------------------------
+@router.delete("/reset/{user_id}")
+async def reset_memory(user_id: str):
+    memory_db.reset(user_id)
+    return {"message": f"Memoria de {user_id} eliminada"}
+
