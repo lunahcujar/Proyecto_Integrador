@@ -13,6 +13,8 @@ from typing import Optional
 from uuid import uuid4
 import os
 
+from starlette.responses import JSONResponse
+
 # Modelos y conexión
 from app_.api.models import User, Habito, Producto, Rutina, RutinaProducto, Consulta
 from app_.core.dbconnection import get_db
@@ -344,88 +346,156 @@ async def seguimiento_ia_alias(data: Consulta):
     respuesta = await dermatology_agent.chat("default_user", data.pregunta)
     return {"respuesta": respuesta}
 
-from fastapi import APIRouter, UploadFile, File, Form
+
+
+
+
+
+
+
+
+# app_/routes/api.py (o como lo tengas)
+from fastapi import APIRouter, Form, File, UploadFile, Request, HTTPException
+from fastapi.responses import JSONResponse
+import uuid
+import os
+
+# Tus módulos corregidos
 from app_.ia_agent.agent import dermatology_agent
+from app_.ia_agent.vision import analyze_skin_photo        # ← la versión async corregida
+from app_.ia_agent.routines import generate_routine        # ← ahora es async
 from app_.ia_agent.memory import get_user_memory, update_user_memory
+from app_.ia_agent.chat import save_message                 # (opcional, ya no se usa aquí)
+
+# Supabase
+from supabase import create_client
+supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 
 
-router = APIRouter(prefix="/agent", tags=["Agente IA"])
 
-# -------------------------------------
-# 1. CHAT GENERAL (compatible con HTML)
-# -------------------------------------
+
+# --------------------------------------------------
+# 1. CHAT GENERAL (el más importante del frontend)
+# --------------------------------------------------
 @router.post("/chat")
 async def chat_with_agent(
     user_id: str = Form(...),
     message: str = Form(...)
 ):
-    # Recuperar historial previo
-    history = memory_db.get_history(user_id)
+    if not user_id or not message.strip():
+        raise HTTPException(400, detail="Falta user_id o mensaje")
 
-    # Pedir respuesta al agente
-    response = await dermatology_agent.chat(user_id, message, history)
+    try:
+        # El agente ya guarda el mensaje internamente (chat.py)
 
-    # Guardar conversación en memoria
-    memory_db.save_message(user_id, "user", message)
-    memory_db.save_message(user_id, "assistant", response)
+        response = await dermatology_agent(user_id, message)  # ← ¡ahora debe ser async!
+        return {"reply": response}
 
-    return {"reply": response}
+    except Exception as e:
+        print(f"[ERROR /chat] {e}")
+        raise HTTPException(500, detail="Error del asistente dermatológico")
 
 
-# -------------------------------------
-# 2. ANALIZAR PIEL DESDE UNA IMAGEN
-# -------------------------------------
+# --------------------------------------------------
+# 2. ANÁLISIS DE FOTO DE PIEL (GPT-4 Vision)
+# --------------------------------------------------
+
+from app_.ia_agent.vision import analyze_skin_photo
+
 @router.post("/skin-analysis")
 async def analyze_skin(
     user_id: str = Form(...),
     file: UploadFile = File(...)
 ):
-    result = await dermatology_agent.analyze_skin(user_id, file)
-    return {"skin_condition": result}
+    if not user_id:
+        raise HTTPException(400, detail="user_id requerido")
 
+    if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+        raise HTTPException(400, detail="Solo JPG, PNG o WebP")
 
-# -------------------------------------
+    try:
+        image_bytes = await file.read()
+        analysis = await analyze_skin_photo(user_id, image_bytes, file.filename)
+        return {"skin_condition": analysis}
+    except Exception as e:
+        print(f"[ERROR /skin-analysis] {e}")
+        raise HTTPException(500, detail="Error analizando la imagen")
+# --------------------------------------------------
 # 3. GENERAR RUTINA PERSONALIZADA
-# -------------------------------------
+# --------------------------------------------------
 @router.post("/routine")
-async def generate_routine(user_id: str = Form(...)):
-    routine = await dermatology_agent.create_routine(user_id)
-    return {"routine": routine}
+async def generate_routine_endpoint(user_id: str = Form(...)):
+    if not user_id:
+        raise HTTPException(400, detail="user_id requerido")
+
+    try:
+        routine = await generate_routine(user_id)  # ← async
+        return {"routine": routine}
+    except Exception as e:
+        print(f"[ERROR /routine] {e}")
+        raise HTTPException(500, detail="Error generando rutina")
 
 
-# -------------------------------------
-# 4. GUARDAR RESULTADOS DEL TEST DE PIEL
-# -------------------------------------
+# --------------------------------------------------
+# 4. GUARDAR TEST DE PIEL (cuestionario)
+# --------------------------------------------------
 @router.post("/save-test")
 async def save_test(
     user_id: str = Form(...),
-    limpia: str = Form(...),
-    bloqueador: str = Form(...),
-    exfoliacion: str = Form(...)
+    limpia: str = Form("false"),
+    bloqueador: str = Form("false"),
+    exfoliacion: str = Form("nunca")
 ):
     data = {
-        "lava_cara": limpia,
-        "usa_bloqueador": bloqueador,
+        "lava_cara": limpia.lower() == "true",
+        "usa_bloqueador": bloqueador.lower() == "true",
         "frecuencia_exfoliacion": exfoliacion
     }
+    update_user_memory(user_id, data)
+    return {"message": "Test guardado correctamente", "data": data}
 
-    memory_db.save_test(user_id, data)
-    return {"message": "Test guardado", "data": data}
 
-
-# -------------------------------------
+# --------------------------------------------------
 # 5. OBTENER MEMORIA COMPLETA DEL USUARIO
-# -------------------------------------
+# --------------------------------------------------
 @router.get("/memory/{user_id}")
-async def get_user_memory(user_id: str):
-    return memory_db.get_full_memory(user_id)
+async def get_user_memory_endpoint(user_id: str):
+    memory = get_user_memory(user_id)
+    return memory or {}
 
 
-# -------------------------------------
-# 6. RESETEAR / BORRAR HISTORIAL DEL USUARIO
-# -------------------------------------
-@router.delete("/reset/{user_id}")
-async def reset_memory(user_id: str):
-    memory_db.reset(user_id)
-    return {"message": f"Memoria de {user_id} eliminada"}
+# --------------------------------------------------
+# 6. OBTENER O CREAR user_id POR EMAIL
+# --------------------------------------------------
+@router.post("/get_user_id")
+async def get_user_id(request: Request):
+    try:
+        body = await request.json()
+        email = body.get("email", "").strip().lower()
+
+        if not email:
+            return JSONResponse({"user_id": None})
+
+        # Buscar usuario
+        result = supabase.table("usuarios")\
+            .select("id")\
+            .eq("correo", email)\
+            .execute()
+
+        if result.data:
+            return {"user_id": result.data[0]["id"]}
+
+        # Crear si no existe
+        new_user = supabase.table("usuarios").insert({
+            "id": str(uuid.uuid4()),
+            "correo": email,
+            "created_at": "now()"
+        }).execute()
+
+        return {"user_id": new_user.data[0]["id"]}
+
+    except Exception as e:
+        print(f"[ERROR /get_user_id] {e}")
+        return JSONResponse({"user_id": None})
+
 

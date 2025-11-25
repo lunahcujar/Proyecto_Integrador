@@ -1,162 +1,201 @@
+<!-- seguimiento.html -->
 {% extends 'base.html' %}
-
 {% block title %}Plan de Seguimiento{% endblock %}
 
 {% block content %}
 <style>
-    .ia-box {
-        background: #fff;
-        border-radius: 16px;
-        padding: 25px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .chat-container {
-        max-height: 350px;
-        overflow-y: auto;
-        padding-right: 8px;
-    }
-    .msg-user {
-        background: #b6e9ff;
-        padding: 10px;
-        border-radius: 12px;
-        margin-bottom: 10px;
-        text-align: right;
-    }
-    .msg-ia {
-        background: #ffd3e0;
-        padding: 10px;
-        border-radius: 12px;
-        margin-bottom: 10px;
-    }
-    .typing {
-        background: #ffe4ec;
-        padding: 8px;
-        border-radius: 10px;
-        font-style: italic;
-        opacity: 0.7;
-    }
-    .btn-send {
-        background: #ff6f91;
-        border: none;
-        color: white;
-        padding: 10px 18px;
-        border-radius: 10px;
-        cursor: pointer;
-    }
-    .btn-send:hover {
-        background: #ff537a;
-    }
-    .chips {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 10px;
-    }
-    .chip {
-        background: #ffe0eb;
-        padding: 6px 12px;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 14px;
-        border: 1px solid #ffb6ca;
-    }
-    .chip:hover {
-        background: #ffcada;
-    }
+  .ia-box { background: #fff; border-radius: 16px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+  .chat-container { max-height: 420px; overflow-y: auto; padding-right: 10px; margin-bottom: 15px; }
+  .chat-container::-webkit-scrollbar { width: 6px; }
+  .chat-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+  .chat-container::-webkit-scrollbar-thumb { background: #ffb6ca; border-radius: 10px; }
+  .msg-user { background: linear-gradient(135deg, #b6e9ff, #87cefa); color: #1e3a8a; padding: 12px 16px; border-radius: 18px 18px 4px 18px; margin: 10px 0 10px auto; max-width: 80%; word-wrap: break-word; }
+  .msg-ia { background: linear-gradient(135deg, #ffd3e0, #ff9ebb); color: #4a0e2b; padding: 12px 16px; border-radius: 18px 18px 18px 4px; margin: 10px 0 10px 0; max-width: 80%; word-wrap: break-word; }
+  .typing { background: #ffe4ec; padding: 10px 16px; border-radius: 18px; font-style: italic; opacity: 0.8; display: inline-block; }
+  .btn-send { background: #ff6f91; border: none; color: white; padding: 12px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+  .btn-send:hover { background: #ff4777; transform: scale(1.05); transition: 0.2s; }
+  .btn-photo { background: #ff9ebb; color: white; padding: 12px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+  .btn-photo:hover { background: #ff6f91; }
+  .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+  .chip { background: #ffe0eb; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-size: 14px; border: 1.5px solid #ff9ebb; transition: all 0.2s; }
+  .chip:hover { background: #ff9ebb; color: white; transform: translateY(-2px); }
+  .photo-preview { max-width: 100%; max-height: 300px; border-radius: 12px; margin: 10px 0; display: none; }
+  #chat-section { display: none; }
 </style>
 
-<div class="container mt-5">
-    <div class="ia-box">
-        <h2 class="mb-3">🌸 Plan de seguimiento con AyudaMe Dermatología</h2>
+<div class="container mt-5 mb-5">
+  <div class="ia-box">
+    <h2 class="mb-4 text-center">Plan de seguimiento con AyudaMe Dermatología</h2>
 
-        <p>
-            Tu asistente dermatológico virtual te ayudará con recomendaciones, dudas
-            y seguimiento real de tu piel. ¡Escribe tu pregunta o sube tu foto cuando quieras!
-        </p>
-
-        <hr>
-
-        <h4 class="mb-3">🤖 Asistente IA Dermatológico</h4>
-
-        <div class="chips">
-            <div class="chip" onclick="quickSend('¿Qué crema debería usar según mi tipo de piel?')">¿Crema ideal?</div>
-            <div class="chip" onclick="quickSend('Mi piel está muy seca últimamente')">Piel seca</div>
-            <div class="chip" onclick="quickSend('¿Qué protector solar me recomiendas?')">Protector solar</div>
-            <div class="chip" onclick="quickSend('Tengo granitos y no sé por qué')">Acné</div>
-        </div>
-
-        <div class="chat-container" id="chatBox"></div>
-
-        <div class="d-flex mt-3">
-            <input type="text" id="userInput" class="form-control" placeholder="Escribe tu duda sobre tu piel...">
-            <button class="btn-send ms-2" onclick="enviarMensaje()">Enviar</button>
-        </div>
-
-        <p class="mt-3 text-muted">
-            💡 <b>Ejemplos:</b><br>
-            — “¿Cada cuánto me exfolio?” <br>
-            — “Mi piel se pone roja con el sol” <br>
-            — “Recomiéndame una rutina completa”
-        </p>
-
-        <hr>
-
-        <h4>📅 Recordatorios de tu rutina</h4>
-        <ul>
-            <li>🌞 Mañana: limpieza + hidratante + protector solar</li>
-            <li>🌤️ Tarde: hidratación ligera</li>
-            <li>🌙 Noche: limpieza + crema nutritiva</li>
-        </ul>
+    <!-- LOGIN -->
+    <div id="login-section">
+      <p class="lead">Ingresa tu correo para continuar con tu plan personalizado:</p>
+      <div class="d-flex gap-2">
+        <input type="email" id="emailInput" class="form-control" placeholder="tu@email.com" style="max-width: 350px;">
+        <button class="btn-send" onclick="loginUser()">Ingresar</button>
+      </div>
+      <p id="login-error" class="text-danger mt-2 fw-bold" style="display:none;"></p>
     </div>
+
+    <!-- CHAT + ANÁLISIS DE FOTOS -->
+    <div id="chat-section">
+      <p>¡Hola de nuevo! Tu asistente dermatológico está aquí para ayudarte</p>
+      <hr>
+
+      <!-- NUEVO: BOTÓN DE ANÁLISIS DE FOTOS -->
+      <div class="text-center mb-4">
+        <h4>¿Quieres que analice tu piel ahora?</h4>
+        <p class="text-muted">Toma una selfie clara del rostro (sin maquillaje, buena luz)</p>
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
+        <button class="btn-photo" onclick="document.getElementById('photoInput').click()">
+          Tomar foto / Subir foto
+        </button>
+        <div id="photoPreviewContainer">
+          <img id="photoPreview" class="photo-preview" />
+        </div>
+        <div id="photoStatus" class="mt-2"></div>
+      </div>
+
+      <hr>
+      <h4 class="mb-3">Asistente IA Dermatológico</h4>
+      <div class="chips">
+        <div class="chip" onclick="quickSend('¿Qué crema debería usar según mi tipo de piel?')">Crema ideal</div>
+        <div class="chip" onclick="quickSend('Mi piel está muy seca últimamente')">Piel seca</div>
+        <div class="chip" onclick="quickSend('¿Qué protector solar me recomiendas?')">Protector solar</div>
+        <div class="chip" onclick="quickSend('Tengo granitos y no sé por qué')">Acné</div>
+        <div class="chip" onclick="quickSend('¿Cada cuánto me exfolio?')">Exfoliación</div>
+      </div>
+
+      <div class="chat-container bg-light p-3 rounded" id="chatBox">
+        <div class="msg-ia">¡Hola! Soy tu asistente dermatológico. ¿En qué puedo ayudarte hoy?</div>
+      </div>
+
+      <div class="d-flex mt-3 gap-2">
+        <input type="text" id="userInput" class="form-control" placeholder="Escribe tu duda sobre tu piel..." onkeypress="if(event.key==='Enter') enviarMensaje()">
+        <button class="btn-send" onclick="enviarMensaje()">Enviar</button>
+      </div>
+
+      <p class="mt-3 text-muted small">
+        Ejemplos:<br>
+        • “Mi piel se pone roja con el sol”<br>
+        • “¿Puedo usar retinol si tengo piel sensible?”<br>
+        • “Recomiéndame una rutina completa”
+      </p>
+
+      <hr>
+      <h4>Recordatorios de tu rutina</h4>
+      <ul class="list-unstyled">
+        <li>Mañana: limpieza + hidratante + protector solar</li>
+        <li>Tarde: hidratación ligera (si es necesario)</li>
+        <li>Noche: doble limpieza + sérum + crema nutritiva</li>
+      </ul>
+    </div>
+  </div>
 </div>
 
 <script>
-const USER_ID = "{{ request.session.get('user_id', 'default_user') }}";
-// Si usas otra forma de manejar sesión, ajusto esto si quieres.
+  let USER_ID = null;
 
-function quickSend(text) {
+  // LOGIN
+  async function loginUser() {
+    const email = document.getElementById("emailInput").value.trim();
+    const errorEl = document.getElementById("login-error");
+    errorEl.style.display = 'none';
+    if (!email || !email.includes('@')) {
+      errorEl.textContent = "Ingresa un correo válido";
+      errorEl.style.display = 'block';
+      return;
+    }
+    try {
+      const response = await fetch("/get_user_id", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await response.json();
+      if (data.user_id) {
+        USER_ID = data.user_id;
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("chat-section").style.display = "block";
+      } else {
+        errorEl.textContent = "Correo no encontrado.";
+        errorEl.style.display = 'block';
+      }
+    } catch (err) {
+      errorEl.textContent = "Error de conexión.";
+      errorEl.style.display = 'block';
+    }
+  }
+
+  // SUBIR FOTO Y ANALIZAR
+  document.getElementById("photoInput").addEventListener("change", async function(e) {
+    const file = e.target.files[0];
+    if (!file || !USER_ID) return;
+
+    const preview = document.getElementById("photoPreview");
+    const status = document.getElementById("photoStatus");
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+    status.innerHTML = "<small>Analizando tu piel...</small>";
+
+    const formData = new FormData();
+    formData.append("user_id", USER_ID);
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/skin-analysis", {
+        method: "POST",
+        body: formData
+      });
+      const result = await response.json();
+
+      if (result.skin_condition) {
+        const chatBox = document.getElementById("chatBox");
+        chatBox.innerHTML += `<div class="msg-ia"><strong>Análisis de tu piel:</strong><br>${result.skin_condition.replace(/\n/g, "<br>")}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+        status.innerHTML = "<small class='text-success'>¡Análisis completado!</small>";
+      } else {
+        status.innerHTML = "<small class='text-danger'>Error al analizar.</small>";
+      }
+    } catch (err) {
+      status.innerHTML = "<small class='text-danger'>Error de conexión.</small>";
+    }
+  });
+
+  // CHIPS Y ENVÍO
+  function quickSend(text) {
     document.getElementById("userInput").value = text;
     enviarMensaje();
-}
+  }
 
-async function enviarMensaje() {
+  async function enviarMensaje() {
     const input = document.getElementById("userInput");
     const chatBox = document.getElementById("chatBox");
     const texto = input.value.trim();
-    if (!texto) return;
+    if (!texto || !USER_ID) return;
 
-    // Mensaje del usuario
     chatBox.innerHTML += `<div class="msg-user">${texto}</div>`;
     input.value = "";
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // Indicador "escribiendo..."
     const typingId = "typing-" + Date.now();
-    chatBox.innerHTML += `<div class="typing" id="${typingId}">La IA está escribiendo...</div>`;
+    chatBox.innerHTML += `<div class="typing" id="${typingId}">Escribiendo...</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
 
+    const formData = new FormData();
+    formData.append("user_id", USER_ID);
+    formData.append("message", texto);
+
     try {
-        const formData = new FormData();
-        formData.append("user_id", USER_ID);
-        formData.append("message", texto);
-
-        const response = await fetch("/agent/chat", {
-            method: "POST",
-            body: formData
-        });
-
-        const data = await response.json();
-
-        document.getElementById(typingId).remove();
-
-        chatBox.innerHTML += `<div class="msg-ia">${data.reply}</div>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
-
+      const response = await fetch("/chat", { method: "POST", body: formData });
+      const data = await response.json();
+      document.getElementById(typingId).remove();
+      chatBox.innerHTML += `<div class="msg-ia">${data.reply || "No pude procesar tu mensaje"}</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
     } catch (error) {
-        document.getElementById(typingId).remove();
-        chatBox.innerHTML += `<div class="msg-ia">⚠️ Error al conectar con el agente. Intenta nuevamente.</div>`;
+      document.getElementById(typingId).remove();
+      chatBox.innerHTML += `<div class="msg-ia">Error de conexión. Intenta nuevamente.</div>`;
     }
-}
+  }
 </script>
-
 {% endblock %}
