@@ -1,0 +1,33 @@
+# === Archivos de entorno ===
+.env
+*.env
+
+# === Entorno virtual ===
+venv/
+.venv/
+
+# === Archivos de Python ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# === Archivos de logs ===
+*.log
+
+# === Configuración de IDE (PyCharm, VSCode, etc.) ===
+.idea/
+.vscode/
+
+# === Archivos temporales del sistema ===
+.DS_Store
+Thumbs.db
+
+# === Archivos de compilación ===
+build/
+dist/
+*.egg-info/
+
+# === Carpeta de subida o almacenamiento temporal ===
+uploads/
+tmp/
