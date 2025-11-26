@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, ForeignKey, Float
+from sqlalchemy import Column, String, ForeignKey, Float, SmallInteger
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel
@@ -32,8 +32,7 @@ class Habito(Base):
     exfoliacion = Column(String(50))
     tipo_piel = Column(String(50))
     objetivo = Column(String(100))
-    edad = Column(String(10))
-
+    edad = Column(SmallInteger, nullable=True)
     usuario = relationship("User", back_populates="habitos")
 
 

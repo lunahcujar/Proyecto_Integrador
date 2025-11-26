@@ -1,5 +1,6 @@
 import csv
 import unicodedata
+from datetime import datetime
 from random import random, shuffle
 
 from fastapi import (
@@ -50,17 +51,36 @@ async def perfil(request: Request, email: str, db: AsyncSession = Depends(get_db
     """
     Carga el perfil del usuario con sus hábitos y productos de rutina.
     """
+    # Obtener usuario
     result = await db.execute(select(User).where(User.correo == email))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
+    # Obtener hábitos
     result_habitos = await db.execute(select(Habito).where(Habito.usuario_id == user.id))
-    habitos = result_habitos.scalars().all()
+    habitos_db = result_habitos.scalars().all()
 
+    # SERIALIZAR HÁBITOS
+    def serialize_habito(h):
+        return {
+            "id": str(h.id),
+            "usuario_id": str(h.usuario_id),
+            "lavarse_cara": h.lavarse_cara,
+            "protector_solar": h.protector_solar,
+            "exfoliacion": h.exfoliacion,
+            "tipo_piel": h.tipo_piel,
+            "objetivo": h.objetivo,
+            "edad": h.edad,
+        }
+
+    habitos = [serialize_habito(h) for h in habitos_db]
+
+    # Obtener rutina y productos
     productos = []
     result_rutina = await db.execute(select(Rutina).where(Rutina.usuario_id == user.id))
     rutina = result_rutina.scalars().first()
+
     if rutina:
         result_productos = await db.execute(
             select(Producto)
@@ -73,6 +93,7 @@ async def perfil(request: Request, email: str, db: AsyncSession = Depends(get_db
         "users.html",
         {"request": request, "usuario": user, "habitos": habitos, "productos": productos}
     )
+
 
 # =====================================================
 # USUARIOS
@@ -99,6 +120,14 @@ async def registrar_usuario(request: Request, db: AsyncSession = Depends(get_db)
     await db.commit()
     await db.refresh(nuevo_usuario)
 
+
+    edad_raw = quiz.get("pregunta_6")
+
+
+    try:
+        edad_final = int(edad_raw) if edad_raw not in (None, "", "0") else None
+    except ValueError:
+        edad_final = None
     habit_data = Habito(
         usuario_id=nuevo_usuario.id,
         lavarse_cara=quiz.get("pregunta_1"),
@@ -106,7 +135,7 @@ async def registrar_usuario(request: Request, db: AsyncSession = Depends(get_db)
         exfoliacion=quiz.get("pregunta_3"),
         tipo_piel=quiz.get("pregunta_4"),
         objetivo=quiz.get("pregunta_5"),
-        edad=int(quiz.get("pregunta_6", 0)) if quiz.get("pregunta_6") else None,
+        edad=edad_final
     )
     db.add(habit_data)
     await db.commit()
@@ -257,7 +286,8 @@ async def obtener_rutina_usuario(email: str, db: AsyncSession = Depends(get_db))
                         "descripcion": p.product_type,
                         "tipo_piel": p.skin_type,
                         "precio": p.price,
-                        "imagen": p.image_url
+                        "imagen": p.image_url,
+                        "cl": p.clean_ingreds
                     }
                     for p in productos_list
                 ]
@@ -271,7 +301,6 @@ async def obtener_rutina_usuario(email: str, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=500, detail=f"Error interno: {e}")
 
 
-CSV_FILE = "/home/lunahcujar/PycharmProjects/Proyecto_Integrador/usuarios.csv"
 
 
 # app_/routes/usuario.py  (o donde tengas el router)
@@ -279,42 +308,38 @@ from fastapi import APIRouter, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 @router.put("/api/editar_usuario", tags=["Usuario"])
 async def editar_usuario(
-    correo: str = Query(..., description="Correo del usuario a editar"),
     datos: dict = Body(...),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Edita cualquier campo del usuario y/o sus hábitos.
-    Puedes enviar solo los campos que quieras modificar.
+    Edita perfil del usuario + hábitos.
+    Convierte booleanos a strings para evitar errores al guardar.
     """
-    try:
-        # ================================
-        # 1. Buscar usuario por correo
-        # ================================
-        usuario = (
-            await db.execute(select(User).where(User.correo == correo))
-        ).scalar_one_or_none()
 
+    # 1. Correo viene en el JSON
+    correo = datos.pop("correo", None)
+    if not correo:
+        raise HTTPException(status_code=400, detail="Falta el correo del usuario")
+
+    try:
+        # 2. Buscar usuario
+        result = await db.execute(select(User).where(User.correo == correo))
+        usuario = result.scalar_one_or_none()
         if not usuario:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
         cambios = []
 
-        # ================================
-        # 2. Editar campos del usuario
-        # ================================
+        # === Editar nombre del usuario ===
         if "nombre" in datos and datos["nombre"]:
             usuario.nombre = datos["nombre"].strip()
             cambios.append("nombre")
 
-        # Nuevo: permitir cambiar el correo
-        if "correo" in datos and datos["correo"]:
-            nuevo_correo = datos["correo"].strip()
-
-            # Verificar que no exista ya
-            existe = (
-                await db.execute(select(User).where(User.correo == nuevo_correo))
-            ).scalar_one_or_none()
+        # === Permitir cambiar el correo ===
+        if "nuevo_correo" in datos and datos["nuevo_correo"]:
+            nuevo_correo = datos["nuevo_correo"].strip()
+            existe = await db.execute(select(User).where(User.correo == nuevo_correo))
+            existe = existe.scalar_one_or_none()
 
             if existe and existe.id != usuario.id:
                 raise HTTPException(
@@ -325,45 +350,42 @@ async def editar_usuario(
             usuario.correo = nuevo_correo
             cambios.append("correo")
 
-        # ================================
-        # 3. Obtener o crear hábitos
-        # ================================
-        habito = (
-            await db.execute(select(Habito).where(Habito.usuario_id == usuario.id))
-        ).scalar_one_or_none()
+        # === Obtener registro de hábitos ===
+        result = await db.execute(select(Habito).where(Habito.usuario_id == usuario.id))
+        habito = result.scalar_one_or_none()
 
         if not habito:
             habito = Habito(usuario_id=usuario.id)
             db.add(habito)
 
-        # ================================
-        # 4. Actualizar hábitos
-        # ================================
-        campos_habito = {
-            "tipo_piel": str,
-            "edad": int,
-            "lavarse_cara": lambda x: str(x).lower() in ["true", "1", "yes", "sí", "si"],
-            "protector_solar": lambda x: str(x).lower() in ["true", "1", "yes", "sí", "si"],
-            "exfoliacion": str,
-            "objetivo": str,
-        }
+        # === NORMALIZACIÓN para evitar errores ===
+        def normalizar(valor):
+            if isinstance(valor, bool):
+                return "Sí" if valor else "No"
+            if valor in [None, ""]:
+                return None
+            return str(valor)
 
-        for campo, tipo in campos_habito.items():
+        # === Campos a actualizar ===
+        campos_habito = ["lavarse_cara", "protector_solar", "exfoliacion", "tipo_piel", "objetivo"]
+
+        for campo in campos_habito:
             if campo in datos:
-                val = datos[campo]
-                if val in ["", None]:
-                    setattr(habito, campo, None)
-                else:
-                    try:
-                        setattr(habito, campo, tipo(val))
-                    except:
-                        setattr(habito, campo, None)
-
+                setattr(habito, campo, normalizar(datos[campo]))
                 cambios.append(campo)
 
-        # ================================
-        # 5. Guardar cambios
-        # ================================
+        # === Edad (entero) ===
+        if "edad" in datos:
+            edad_val = datos["edad"]
+            if edad_val in ["", None, 0, "0"]:
+                habito.edad = None
+            else:
+                habito.edad = int(edad_val)
+            cambios.append("edad")
+
+        # -------------------------
+        # Guardar en BD
+        # -------------------------
         await db.commit()
         await db.refresh(usuario)
         await db.refresh(habito)
@@ -371,7 +393,7 @@ async def editar_usuario(
         return {
             "mensaje": "Perfil actualizado correctamente",
             "usuario": usuario.correo,
-            "campos_actualizados": cambios or ["No cambiaste ningún campo"]
+            "campos_actualizados": cambios or ["Ningún cambio"]
         }
 
     except HTTPException:
@@ -382,34 +404,39 @@ async def editar_usuario(
         raise HTTPException(status_code=500, detail="Error al actualizar el perfil")
 
 
-
 @router.delete("/api/eliminar_usuario", tags=["Usuario"])
-async def eliminar_usuario(correo: str = Query(..., description="Correo del usuario a eliminar")):
-    if not os.path.exists(CSV_FILE):
-        raise HTTPException(status_code=404, detail="Archivo de usuarios no encontrado")
+async def eliminar_usuario(correo: str = Query(...)):
 
-    usuarios = []
-    eliminado = False
+    # 1. Buscar usuario en Supabase
+    user_query = supabase.table("usuarios").select("*").eq("correo", correo).execute()
 
-    # Leer usuarios y filtrar
-    with open(CSV_FILE, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if row["correo"] == correo:
-                eliminado = True
-                continue  # no lo agregamos, se elimina
-            usuarios.append(row)
-
-    if not eliminado:
+    if not user_query.data:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    # Guardar cambios
-    with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["id","nombre","correo","tipo_piel","edad"])
-        writer.writeheader()
-        writer.writerows(usuarios)
+    usuario = user_query.data[0]
 
-    return {"mensaje": "Usuario eliminado correctamente", "correo": correo}
+    # 2. Guardar usuario eliminado
+    supabase.table("usuarios_eliminados").insert({
+        "correo": usuario.get("correo"),
+        "nombre": usuario.get("nombre"),
+        "edad": usuario.get("edad"),
+        "tipo_piel": usuario.get("tipo_piel"),
+        "habitos": usuario.get("habitos"),  # ⚠️ Asegúrate de que la columna exista
+        # fecha_eliminacion se llena sola por default NOW()
+    }).execute()
+
+    # 3. Borrar rutinas asociadas
+    supabase.table("rutinas").delete().eq("usuario_id", usuario["id"]).execute()
+
+    # 4. Borrar usuario principal
+    supabase.table("usuarios").delete().eq("correo", correo).execute()
+
+    return {"message": "Usuario eliminado y registrado en usuarios_eliminados"}
+
+
+
+
+
 
 
 @router.get("/seguimiento")

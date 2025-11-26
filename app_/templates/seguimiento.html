@@ -27,72 +27,346 @@
   <div class="ia-box">
     <h2 class="mb-4 text-center">Plan de seguimiento con AyudaMe Dermatología</h2>
 
-    <!-- LOGIN -->
-    <div id="login-section">
-      <p class="lead">Ingresa tu correo para continuar con tu plan personalizado:</p>
-      <div class="d-flex gap-2">
-        <input type="email" id="emailInput" class="form-control" placeholder="tu@email.com" style="max-width: 350px;">
-        <button class="btn-send" onclick="loginUser()">Ingresar</button>
-      </div>
-      <p id="login-error" class="text-danger mt-2 fw-bold" style="display:none;"></p>
-    </div>
+    <!-- LOGIN - VERSIÓN HERMOSA 2025 -->
+<div id="login-section" style="max-width: 600px; margin: 40px auto; text-align: center;">
+    <h2 class="mb-4" style="color: #8a2be2; font-weight: 700; font-size: 2.2rem;">
+        ¡Bienvenida de nuevo!
+    </h2>
+    <p class="lead mb-5" style="color: #6c5ce7; font-size: 1.3rem;">
+        Ingresa tu correo para continuar con tu rutina personalizada ✨
+    </p>
 
-    <!-- CHAT + ANÁLISIS DE FOTOS -->
-    <div id="chat-section">
-      <p>¡Hola de nuevo! Tu asistente dermatológico está aquí para ayudarte</p>
-      <hr>
+    <!-- Campo grande, bonito y con efecto glow -->
+    <div class="d-flex flex-column flex-md-row gap-3 justify-content-center align-items-center">
+        <div style="position: relative; width: 100%; max-width: 480px;">
+            <input
+                type="email"
+                id="emailInput"
+                class="form-control form-control-lg shadow-lg"
+                placeholder="tu@email.com"
+                style="
+                    height: 68px;
+                    font-size: 1.4rem;
+                    padding: 0 60px 0 24px;
+                    border-radius: 50px;
+                    border: 3px solid transparent;
+                    background: linear-gradient(white, white) padding-box,
+                                linear-gradient(120deg, #8a2be2, #fd79a8) border-box;
+                    transition: all 0.4s ease;
+                    outline: none;
+                "
+                onfocus="this.style.boxShadow='0 0 25px rgba(138, 43, 226, 0.5)'"
+                onblur="this.style.boxShadow='0 8px 25px rgba(0,0,0,0.1)'"
+            >
+            <span style="
+                position: absolute;
+                right: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 1.8rem;
+                pointer-events: none;
+            ">
 
-      <!-- NUEVO: BOTÓN DE ANÁLISIS DE FOTOS -->
-      <div class="text-center mb-4">
-        <h4>¿Quieres que analice tu piel ahora?</h4>
-        <p class="text-muted">Toma una selfie clara del rostro (sin maquillaje, buena luz)</p>
-        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
-        <button class="btn-photo" onclick="document.getElementById('photoInput').click()">
-          Tomar foto / Subir foto
-        </button>
-        <div id="photoPreviewContainer">
-          <img id="photoPreview" class="photo-preview" />
+            </span>
         </div>
-        <div id="photoStatus" class="mt-2"></div>
-      </div>
 
-      <hr>
-      <h4 class="mb-3">Asistente IA Dermatológico</h4>
-      <div class="chips">
-        <div class="chip" onclick="quickSend('¿Qué crema debería usar según mi tipo de piel?')">Crema ideal</div>
-        <div class="chip" onclick="quickSend('Mi piel está muy seca últimamente')">Piel seca</div>
-        <div class="chip" onclick="quickSend('¿Qué protector solar me recomiendas?')">Protector solar</div>
-        <div class="chip" onclick="quickSend('Tengo granitos y no sé por qué')">Acné</div>
-        <div class="chip" onclick="quickSend('¿Cada cuánto me exfolio?')">Exfoliación</div>
-      </div>
-
-      <div class="chat-container bg-light p-3 rounded" id="chatBox">
-        <div class="msg-ia">¡Hola! Soy tu asistente dermatológico. ¿En qué puedo ayudarte hoy?</div>
-      </div>
-
-      <div class="d-flex mt-3 gap-2">
-        <input type="text" id="userInput" class="form-control" placeholder="Escribe tu duda sobre tu piel..." onkeypress="if(event.key==='Enter') enviarMensaje()">
-        <button class="btn-send" onclick="enviarMensaje()">Enviar</button>
-      </div>
-
-      <p class="mt-3 text-muted small">
-        Ejemplos:<br>
-        • “Mi piel se pone roja con el sol”<br>
-        • “¿Puedo usar retinol si tengo piel sensible?”<br>
-        • “Recomiéndame una rutina completa”
-      </p>
-
-      <hr>
-      <h4>Recordatorios de tu rutina</h4>
-      <ul class="list-unstyled">
-        <li>Mañana: limpieza + hidratante + protector solar</li>
-        <li>Tarde: hidratación ligera (si es necesario)</li>
-        <li>Noche: doble limpieza + sérum + crema nutritiva</li>
-      </ul>
+        <!-- Botón grande y colorido con gradiente animado -->
+        <button
+            class="btn-send"
+            onclick="loginUser()"
+            style="
+                height: 68px;
+                padding: 0 40px;
+                font-size: 1.4rem;
+                font-weight: 700;
+                border-radius: 50px;
+                background: linear-gradient(45deg, #8a2be2, #fd79a8, #a29bfe);
+                background-size: 200% 200%;
+                color: white;
+                border: none;
+                box-shadow: 0 10px 30px rgba(138, 43, 226, 0.4);
+                transition: all 0.4s ease;
+                animation: gradientShift 6s ease infinite;
+                cursor: pointer;
+                white-space: nowrap;
+            "
+            onmouseover="this.style.transform='scale(1.08)'; this.style.boxShadow='0 15px 40px rgba(138, 43, 226, 0.6)'"
+            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 10px 30px rgba(138, 43, 226, 0.4)'"
+        >
+            Ingresar
+        </button>
     </div>
-  </div>
+
+    <!-- Mensaje de error más visible -->
+    <p id="login-error"
+       class="text-danger mt-4 fw-bold"
+       style="
+           display: none;
+           font-size: 1.3rem;
+           background: rgba(231, 76, 60, 0.1);
+           padding: 15px 30px;
+           border-radius: 15px;
+           border-left: 6px solid #e74c3c;
+           max-width: 500px;
+           margin: 20px auto;
+       ">
+    </p>
 </div>
 
+<!-- Animación del gradiente del botón -->
+<style>
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Efecto de foco en el input */
+    #emailInput:focus {
+        border-color: #8a2be2 !important;
+        box-shadow: 0 0 30px rgba(138, 43, 226, 0.6) !important;
+        transform: scale(1.02);
+    }
+
+    /* Responsive para móviles */
+    @media (max-width: 768px) {
+        #login-section h2 { font-size: 1.9rem; }
+        #login-section .lead { font-size: 1.1rem; }
+        .d-flex { flex-direction: column; }
+        .btn-send { width: 100%; max-width: 480px; margin-top: 15px; }
+    }
+</style>
+   <!-- CHAT + ANÁLISIS DE FOTOS - VERSIÓN HERMOSA Y PROFESIONAL -->
+<div id="chat-section" style="max-width: 900px; margin: 50px auto; padding: 40px; background: linear-gradient(135deg, #fdf2ff 0%, #f5e8ff 100%); border-radius: 32px; box-shadow: 0 20px 60px rgba(138, 43, 226, 0.25);">
+
+    <!-- Título grande y bonito -->
+    <div class="text-center mb-5">
+        <h2 style="font-size: 2.8rem; background: linear-gradient(90deg, #8a2be2, #fd79a8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">
+            ¡Hola de nuevo!
+        </h2>
+        <p style="font-size: 1.5rem; color: #6c5ce7; margin-top: 15px;">
+            Tu asistente dermatológico está aquí para ayudarte
+        </p>
+    </div>
+
+    <hr style="border: 2px solid #e0c3fc; border-radius: 50px; opacity: 0.6;">
+
+    <!-- ANÁLISIS DE FOTOS - GRANDE Y HERMOSO -->
+    <div class="text-center mb-5 p-5 bg-white rounded-3xl shadow-xl" style="border: 4px dashed #d0a8ff;">
+        <h3 style="font-size: 2.2rem; color: #8a2be2; margin-bottom: 20px;">
+            ¿Quieres que analice tu piel ahora?
+        </h3>
+        <p style="font-size: 1.3rem; color: #777; margin-bottom: 30px;">
+            Toma una selfie clara del rostro (sin maquillaje, buena luz)
+        </p>
+
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
+
+        <button onclick="document.getElementById('photoInput').click()"
+                style="font-size: 1.5rem; padding: 18px 50px; border-radius: 50px; background: linear-gradient(45deg, #8a2be2, #fd79a8); color: white; border: none; box-shadow: 0 15px 35px rgba(138, 43, 226, 0.4); transition: all 0.4s; cursor: pointer;"
+                onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 20px 50px rgba(138, 43, 226, 0.6)'"
+                onmouseout="this.style.transform=''; this.style.boxShadow='0 15px 35px rgba(138, 43, 226, 0.4)'">
+            Tomar foto / Subir foto
+        </button>
+
+        <div id="photoPreviewContainer" class="mt-4">
+            <img id="photoPreview" class="photo-preview rounded-3xl shadow-2xl" style="max-height: 400px; border: 6px solid #f0d6ff; display: none;" />
+        </div>
+        <div id="photoStatus" class="mt-3 fw-bold" style="font-size: 1.3rem; color: #8a2be2;"></div>
+    </div>
+
+    <hr style="border: 2px solid #e0c3fc; border-radius: 50px; opacity: 0.6; margin: 50px 0;">
+
+    <!-- CHIPS DE PREGUNTAS RÁPIDAS -->
+    <h3 style="font-size: 2.2rem; text-align: center; color: #8a2be2; margin-bottom: 30px;">
+        Pregúntame lo que quieras
+    </h3>
+
+    <div class="chips d-flex flex-wrap justify-content-center gap-3 mb-5">
+        <div class="chip" onclick="quickSend('¿Qué crema debería usar según mi tipo de piel?')">
+            Crema ideal
+        </div>
+        <div class="chip" onclick="quickSend('Mi piel está muy seca últimamente')">
+            Piel seca
+        </div>
+        <div class="chip" onclick="quickSend('¿Qué protector solar me recomiendas?')">
+            Protector solar
+        </div>
+        <div class="chip" onclick="quickSend('Tengo granitos y no sé por qué')">
+            Acné
+        </div>
+        <div class="chip" onclick="quickSend('¿Cada cuánto me exfolio?')">
+            Exfoliación
+        </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="chat-container p-5 rounded-3xl mb-5" style="background: white; min-height: 400px; max-height: 600px; overflow-y: auto; box-shadow: inset 0 10px 30px rgba(138, 43, 226, 0.1); border: 3px solid #f0d6ff;">
+        <div class="msg-ia p-4 rounded-3xl bg-gradient-to-r from-purple-100 to-pink-100" style="max-width: 85%; margin-bottom: 20px; font-size: 1.3rem; box-shadow: 0 8px 25px rgba(138, 43, 226, 0.15);">
+            ¡Hola! Soy tu asistente dermatológico. ¿En qué puedo ayudarte hoy?
+        </div>
+        <div id="chatBox"></div>
+    </div>
+
+    <!-- INPUT DE MENSAJE -->
+    <div class="d-flex gap-3 mb-5">
+        <input type="text" id="userInput" class="form-control form-control-lg"
+               placeholder="Escribe tu duda sobre tu piel..."
+               onkeypress="if(event.key==='Enter') enviarMensaje()"
+               style="font-size: 1.4rem; padding: 20px 25px; border-radius: 50px; border: 3px solid #e0c3fc; box-shadow: 0 10px 30px rgba(138, 43, 226, 0.1);">
+        <button class="btn-send" onclick="enviarMensaje()"
+    style="padding: 0 40px; font-size: 1.4rem; border-radius: 50px; background: linear-gradient(45deg, #8a2be2, #fd79a8); box-shadow: 0 15px 35px rgba(138, 43, 226, 0.4);">
+    Enviar
+</button>
+
+    <!-- EJEMPLOS -->
+    <div class="text-center p-4 bg-white rounded-3xl shadow-lg" style="border: 2px solid #f0d6ff;">
+        <p class="text-muted" style="font-size: 1.2rem; color: #8a2be2;">
+            <strong>Ejemplos:</strong><br>
+            • “Mi piel se pone roja con el sol”<br>
+            • “¿Puedo usar retinol si tengo piel sensible?”<br>
+            • “Recomiéndame una rutina completa”
+        </p>
+    </div>
+
+    <hr style="border: 2px solid #e0c3fc; border-radius: 50px; opacity: 0.6; margin: 50px 0;">
+
+<!-- RECORDATORIOS -->
+<h3 style="font-size: 2.6rem; text-align: center; color: #ff5fa2; margin-bottom: 35px; font-weight: 800; letter-spacing: 1px;">
+    ✨ Recordatorios de tu rutina ✨
+</h3>
+
+<style>
+    .tarjeta-recordatorio {
+        border-radius: 30px;
+        padding: 35px 25px;
+        color: #4d0033;
+        text-align: center;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        background-size: cover;
+        background-blend-mode: overlay;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        cursor: pointer;
+    }
+
+    .tarjeta-recordatorio:hover {
+        transform: translateY(-10px) scale(1.03);
+        box-shadow: 0 25px 45px rgba(0,0,0,0.25);
+    }
+
+    /* Animal print suave rosado */
+    .animal-bg {
+        background-image: url('https://i.imgur.com/ijMfU0o.png');
+        opacity: 0.25;
+    }
+
+    /* Colores personalizados (fondos) */
+    .manana {
+        background: linear-gradient(135deg, #ff9a9e, #fecfef);
+    }
+
+    .tarde {
+        background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+    }
+
+    .noche {
+        background: linear-gradient(135deg, #7f7fd5, #86a8e7, #91eae4);
+    }
+
+    .tarjeta-recordatorio h4 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        color: #2a0f2f; /* ✔ MÁS OSCURO */
+        text-shadow: 0 3px 5px rgba(255,255,255,0.4);
+    }
+
+    .tarjeta-recordatorio p {
+        font-size: 1.45rem;
+        font-weight: 600;
+        color: #2a0f2f; /* ✔ MÁS OSCURO */
+        text-shadow: 0 2px 4px rgba(255,255,255,0.35);
+    }
+    .titulo-seguimiento {
+    font-size: 3rem;                 /* Más grande */
+    font-weight: 900;                /* Súper negrilla */
+    text-align: center;
+    color: #ff3e84;                  /* Rosa fuerte elegante */
+    letter-spacing: 1.5px;
+    text-shadow: 0 4px 10px rgba(255, 100, 150, 0.35);
+    animation: fadeSlide 0.8s ease-out;
+}
+
+/* Animación cute */
+@keyframes fadeSlide {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="tarjeta-recordatorio manana animal-bg">
+            <h4>🌞 Mañana</h4>
+            <p>Limpieza + hidratante + protector solar</p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="tarjeta-recordatorio tarde animal-bg">
+            <h4>🌤️ Tarde</h4>
+            <p>Hidratación ligera (si es necesario)</p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="tarjeta-recordatorio noche animal-bg">
+            <h4>🌙 Noche</h4>
+            <p>Doble limpieza + sérum + crema nutritiva</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- ESTILOS ADICIONALES -->
+<style>
+    .chip {
+        background: linear-gradient(45deg, #d0a8ff, #ff9eea);
+        color: white;
+        padding: 14px 28px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1.2rem;
+        transition: all 0.3s;
+        box-shadow: 0 8px 20px rgba(208, 168, 255, 0.4);
+    }
+    .chip:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 15px 30px rgba(208, 168, 255, 0.6);
+    }
+    .msg-ia, .msg-user {
+        padding: 18px 25px;
+        border-radius: 25px;
+        margin-bottom: 20px;
+        max-width: 85%;
+        font-size: 1.3rem;
+        line-height: 1.6;
+    }
+    .msg-user {
+        background: linear-gradient(135deg, #8a2be2, #fd79a8);
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 8px;
+    }
+</style>
 <script>
   let USER_ID = null;
 
@@ -198,4 +472,8 @@
     }
   }
 </script>
+    </div>
+    </div>
+  </div>
+    </div>
 {% endblock %}

@@ -34,7 +34,6 @@
                     <li><strong>¿Usas protector solar?</strong> {{ "Sí" if h.protector_solar else "No" }}</li>
                     <li><strong>Frecuencia de exfoliación:</strong> {{ h.exfoliacion or "No especificado" }}</li>
                     <li><strong>Objetivo:</strong> {{ h.objetivo or "No especificado" }}</li>
-                    <li><strong>Edad:</strong> {{ h.edad or "No registrada" }}</li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -46,9 +45,9 @@
          RUTINA
     ========================== -->
     <div class="rutina">
-        <h3>Tu rutina personalizada:</h3>
+        <h3>Tus productos recomendados:</h3>
 
-        <button onclick="generarYMostrarRutina()" id="btnGenerarRutina">Generar nueva rutina</button>
+        <button onclick="generarYMostrarRutina()" id="btnGenerarRutina">Generar recomendación</button>
         <p id="loadingRutina" style="margin-top: 15px; font-weight: 500;"></p>
 
         <div id="rutinaContainer" class="productos-grid"></div>
@@ -61,6 +60,7 @@
         <button onclick="mostrarModalEditar()">Editar Perfil</button>
         <button onclick="eliminarUsuario()">Eliminar Perfil</button>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </main>
 <!-- ==========================
      MODAL EDITAR PERFIL
@@ -225,48 +225,102 @@
 </div>
 
 <script>
-    function cerrarModal() {
-        document.getElementById("modalEditar").style.display = "none";
+// =======================
+// ABRIR MODAL Y CARGAR DATOS
+// =======================
+function mostrarModalEditar() {
+    const modal = document.getElementById("modalEditar");
+    modal.style.display = "flex";
+
+    // Obtener datos desde Jinja
+    const habitos = {{ habitos|tojson }};
+    const habito = habitos && habitos.length > 0 ? habitos[0] : {};
+
+    document.querySelector('[name="nombre"]').value = "{{ usuario.nombre }}";
+    document.querySelector('[name="tipo_piel"]').value = habito.tipo_piel || "";
+    document.querySelector('[name="edad"]').value = habito.edad || "";
+    document.querySelector('[name="lavarse_cara"]').value = habito.lavarse_cara? "true" : "false";
+    document.querySelector('[name="protector_solar"]').value = habito.protector_solar ? "true" : "false";
+    document.querySelector('[name="exfoliacion"]').value = habito.exfoliacion || "";
+    document.querySelector('[name="objetivo"]').value = habito.objetivo || "";
+}
+
+// =======================
+// CERRAR MODAL
+// =======================
+function cerrarModal() {
+    document.getElementById("modalEditar").style.display = "none";
+}
+
+// Cerrar si clickea fuera del modal
+window.onclick = function(event) {
+    const modal = document.getElementById("modalEditar");
+    if (event.target === modal) {
+        cerrarModal();
     }
+}
 
-    document.getElementById("formEditarPerfil").addEventListener("submit", async function (e) {
-        e.preventDefault();
+// =======================
+// GUARDAR CAMBIOS
+// =======================
+document.getElementById("formEditarPerfil").addEventListener("submit", async function(e) {
+    e.preventDefault();
 
-        const correoUsuario = localStorage.getItem("correo_usuario");
+    const formData = new FormData(this);
+    const datos = {
+        nombre: formData.get("nombre").trim(),
+        tipo_piel: formData.get("tipo_piel") || null,
+        edad: formData.get("edad") ? parseInt(formData.get("edad")) : null,
+        lavarse_cara: formData.get("lavarse_cara") === "true",
+        protector_solar: formData.get("protector_solar") === "true",
+        exfoliacion: formData.get("exfoliacion") || null,
+        objetivo: formData.get("objetivo").trim() || null
+    };
 
-        if (!correoUsuario) {
-            alert("No se encontró el correo del usuario. Debes iniciar sesión.");
-            return;
-        }
-
-        const formData = new FormData(this);
-        const datos = {};
-
-        formData.forEach((value, key) => {
-            if (value !== "") datos[key] = value;
+    try {
+        const response = await fetch("/api/editar_usuario", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                correo: "{{ usuario.correo }}",
+                ...datos
+            })
         });
 
-        try {
-            const response = await fetch(`/api/editar_usuario?correo=${correoUsuario}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(datos)
+        const result = await response.json();
+
+        if (response.ok) {
+            Swal.fire({
+                title: "¡Perfil actualizado! 💖",
+                text: "Tus cambios fueron guardados correctamente.",
+                icon: "success",
+                confirmButtonText: "Aceptar",
+                confirmButtonColor: "#7b4ee4",
+            }).then(() => {
+                cerrarModal();
+                location.reload();
             });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                alert("Error: " + result.detail);
-                return;
-            }
-
-            alert("Perfil actualizado correctamente");
-            cerrarModal();
-
-        } catch (error) {
-            alert("Error al actualizar el perfil");
+        } else {
+            Swal.fire({
+                title: "Error ❌",
+                text: result.detail || result.mensaje || "No se pudo guardar",
+                icon: "error",
+                confirmButtonText: "Entendido",
+                confirmButtonColor: "#d33",
+            });
         }
-    });
+
+    } catch (err) {
+        console.error(err);
+        Swal.fire({
+            title: "Error de conexión 📡",
+            text: "Verifica tu conexión o intenta más tarde.",
+            icon: "warning",
+            confirmButtonText: "Ok"
+        });
+    }
+});
+
 </script>
 
 <!-- ==========================
@@ -358,9 +412,10 @@
      JAVASCRIPT
 ========================== -->
 <script>
+
 async function generarYMostrarRutina() {
     const email = "{{ usuario.correo }}";
-    document.getElementById("loadingRutina").textContent = "Generando rutina...";
+    document.getElementById("loadingRutina").textContent = "Analizando resultados...";
 
     const res = await fetch(`/api/generar_rutina?email=${email}`, { method: "POST" });
     const data = await res.json();
@@ -379,37 +434,67 @@ async function generarYMostrarRutina() {
         cont.innerHTML += `
             <div class="producto-card">
                 <img src="${p.imagen}" class="producto-img">
-                <h4>${p.nombre}</h4>
-                <p>${p.tipo}</p>
-                <p><strong>$${p.precio}</strong></p>
+
+                <h4 class="producto-nombre">${p.nombre}</h4>
+
+                <p class="producto-tipo">${p.tipo}</p>
+
+                <p class="producto-precio"><strong>$${p.precio}</strong></p>
+
+                </p>
             </div>
         `;
     });
 }
 
-function mostrarModalEditar() {
-    document.getElementById("modalEditar").style.display = "flex";
-}
+async function eliminarUsuario() {
+    const email = "{{ usuario.correo }}";
 
-function cerrarModal() {
-    document.getElementById("modalEditar").style.display = "none";
-}
-
-document.getElementById("formEditarPerfil").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-    const correo_actual = "{{ usuario.correo }}";
-
-    const res = await fetch(`/api/editar_usuario?correo=${correo_actual}`, {
-        method: "PUT",
-        body: formData
+    // 🔔 Confirmación inicial
+    const confirmar = await Swal.fire({
+        title: "¿Eliminar tu perfil?",
+        text: "Esta acción no se puede deshacer. Tus datos se moverán a la tabla de usuarios eliminados.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
     });
 
-    const data = await res.json();
-    alert(data.mensaje);
-    location.reload();
-});
+    if (!confirmar.isConfirmed) return;
+
+    // 🗑️ Petición al backend
+    const res = await fetch(`/api/eliminar_usuario?correo=${email}`, {
+        method: "DELETE"
+    });
+
+    let data = {};
+    try {
+        data = await res.json();
+    } catch (e) {}
+
+    if (res.ok) {
+        // ✅ Confirmación final
+        await Swal.fire({
+            title: "Perfil eliminado",
+            text: "Tu información ha sido movida a la tabla de usuarios eliminados.",
+            icon: "success",
+            confirmButtonText: "Aceptar"
+        });
+
+        // 🔁 Redirección
+        window.location.replace("/");
+        return;
+    }
+
+    // ❌ Error
+    Swal.fire({
+        title: "Error",
+        text: data.detail || "No se pudo eliminar el usuario",
+        icon: "error"
+    });
+}
+
+
 </script>
 
 {% endblock %}

@@ -199,7 +199,8 @@
     <div class="step" data-step="6">
         <img src="/static/img/edad.jpg" class="question-image" alt="Edad del usuario">
         <p>6️⃣ ¿Cuál es tu edad?</p>
-        <input type="number" id="edadInput" placeholder="Ingresa tu edad" min="10" max="99" required>
+       <input type="number" id="edadInput" name="edad" placeholder="Ingresa tu edad" min="10" max="99" required>
+
         <button class="quiz-button" style="display:inline-block;">Siguiente ➡️</button>
     </div>
 
@@ -242,7 +243,7 @@ document.querySelectorAll(".quiz-button").forEach(btn => {
                 alert("Por favor ingresa tu edad antes de continuar");
                 return;
             }
-            respuestas["edad"] = edad;
+            respuestas["pregunta_6"] = edad;
         }
 
         document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove("active");
