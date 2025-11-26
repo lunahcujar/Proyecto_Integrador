@@ -1,88 +1,328 @@
 {% extends 'base.html' %}
-
 {% block title %}Perfil de Usuario{% endblock %}
 
 {% block content %}
 <main>
     <h1 class="titulo-usuarios">Perfil de Usuario</h1>
 
-    <!-- Información del perfil -->
+    <!-- ==========================
+         INFO USUARIO
+    ========================== -->
     <div class="perfil-info">
         <h2>Bienvenid@, {{ usuario.nombre }}</h2>
         <p><strong>Correo:</strong> {{ usuario.correo }}</p>
 
         {% if habitos and habitos|length > 0 %}
-            <p><strong>Tipo de piel:</strong> {{ habitos[0].tipo_piel or "No registrado" }}</p>
+            <p><strong>Tipo de piel:</strong> {{ habitos[0].tipo_piel }}</p>
+            <p><strong>Edad:</strong> {{ habitos[0].edad }}</p>
         {% else %}
             <p><strong>Tipo de piel:</strong> No registrado</p>
+            <p><strong>Edad:</strong> No registrada</p>
         {% endif %}
     </div>
 
-    <!-- Hábitos -->
+    <!-- ==========================
+         HÁBITOS
+    ========================== -->
     <div class="habitos">
-        <h3>💧 Tus hábitos registrados:</h3>
-        {% if habitos and habitos|length > 0 %}
+        <h3>Tus hábitos registrados:</h3>
+
+        {% if habitos %}
             <ul>
                 {% for h in habitos %}
-                    <li><strong>¿Te lavas la cara?</strong> {{ h.lavarse_cara or "No especificado" }}</li>
-                    <li><strong>¿Usas protector solar?</strong> {{ h.protector_solar or "No especificado" }}</li>
+                    <li><strong>¿Te lavas la cara?</strong> {{ "Sí" if h.lavarse_cara else "No" }}</li>
+                    <li><strong>¿Usas protector solar?</strong> {{ "Sí" if h.protector_solar else "No" }}</li>
                     <li><strong>Frecuencia de exfoliación:</strong> {{ h.exfoliacion or "No especificado" }}</li>
                     <li><strong>Objetivo:</strong> {{ h.objetivo or "No especificado" }}</li>
                     <li><strong>Edad:</strong> {{ h.edad or "No registrada" }}</li>
                 {% endfor %}
             </ul>
         {% else %}
-            <p>No tienes hábitos registrados todavía.</p>
+            <p>Aún no has registrado tus hábitos.</p>
         {% endif %}
     </div>
 
-    <!-- Rutina personalizada -->
+    <!-- ==========================
+         RUTINA
+    ========================== -->
     <div class="rutina">
-        <h3>💆‍♀️ Tu rutina personalizada:</h3>
-        <button onclick="generarYMostrarRutina()" id="btnGenerarRutina">🔄 Generar nueva rutina</button>
-        <p id="loadingRutina" style="margin-top: 15px;">Cargando rutina...</p>
+        <h3>Tu rutina personalizada:</h3>
+
+        <button onclick="generarYMostrarRutina()" id="btnGenerarRutina">Generar nueva rutina</button>
+        <p id="loadingRutina" style="margin-top: 15px; font-weight: 500;"></p>
 
         <div id="rutinaContainer" class="productos-grid"></div>
     </div>
 
-    <!-- Botones de acciones -->
+    <!-- ==========================
+         ACCIONES USUARIO
+    ========================== -->
     <div class="botones-acciones">
-        <button onclick="editarUsuario()">✏️ Editar Perfil</button>
-        <button onclick="eliminarUsuario()">🗑️ Eliminar Perfil</button>
+        <button onclick="mostrarModalEditar()">Editar Perfil</button>
+        <button onclick="eliminarUsuario()">Eliminar Perfil</button>
     </div>
-
 </main>
-
+<!-- ==========================
+     MODAL EDITAR PERFIL PRO
+========================== -->
 <style>
-    /* === Estilo general === */
-    body {
-        font-family: "Poppins", sans-serif;
-        background: linear-gradient(180deg, #fae9f2 0%, #f7f3ff 100%);
-        color: #333;
-        margin: 0;
-        padding: 0;
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(3px);
+        justify-content: center;
+        align-items: center;
     }
 
-    main {
-        max-width: 750px;
-        margin: 40px auto;
-        background: #fff;
-        padding: 35px;
-        border-radius: 24px;
-        box-shadow: 0 6px 25px rgba(182, 114, 231, 0.2);
+    .modal-content {
+        background: #ffffff;
+        width: 600px;
+        max-width: 95%;
+        padding: 30px;
+        border-radius: 22px;
+        box-shadow: 0 8px 34px rgba(0, 0, 0, 0.25);
+        animation: fadeIn 0.3s ease;
     }
 
-    h1, h2, h3, h4 {
-        color: #b97cf7;
+    @keyframes fadeIn {
+        0% { opacity: 0; transform: scale(0.9); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+
+    .close {
+        float: right;
+        font-size: 28px;
+        cursor: pointer;
+        color: #555;
+    }
+
+    .modal-content h3 {
         text-align: center;
-        font-weight: 600;
+        margin-bottom: 20px;
+        font-size: 26px;
+        color: #b020d3;
     }
 
-    .perfil-info p, li {
-        font-size: 16px;
-        margin: 6px 0;
-        color: #4a3b6b;
+    .modal-content h4 {
+        text-align: center;
+        margin: 20px 0 10px;
+        font-size: 20px;
+        color: #b020d3;
     }
+
+    /* ==== GRID PARA ORDENAR TODO ==== */
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 10px;
+    }
+
+    .grid-1 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: bold;
+        color: #444;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #d7b4ff;
+        border-radius: 10px;
+        font-size: 15px;
+        outline: none;
+        background: #faf7ff;
+    }
+
+    input:focus, select:focus {
+        border-color: #b020d3;
+        background: #fff;
+        box-shadow: 0 0 6px rgba(176, 32, 211, 0.3);
+    }
+
+    .botones {
+        margin-top: 25px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .btn-guardar {
+        padding: 12px 24px;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, #d46bff, #ff77c8);
+        color: white;
+        font-size: 17px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.25s;
+    }
+
+    .btn-guardar:hover {
+        transform: scale(1.05);
+    }
+
+    .btn-cancelar {
+        padding: 12px 24px;
+        border-radius: 12px;
+        border: none;
+        background: #dcdcdc;
+        color: #444;
+        font-size: 17px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.25s;
+    }
+
+    .btn-cancelar:hover {
+        background: #c4c4c4;
+        transform: scale(1.05);
+    }
+</style>
+
+
+
+<div id="modalEditar" class="modal">
+    <div class="modal-content">
+
+        <span class="close" onclick="cerrarModal()">&times;</span>
+        <h3>Editar mi perfil</h3>
+
+        <form id="formEditarPerfil">
+
+            <!-- Datos personales -->
+            <div class="grid-2">
+                <div>
+                    <label>Nombre completo</label>
+                    <input type="text" name="nombre">
+                </div>
+
+                <div>
+                    <label>Correo electrónico</label>
+                    <input type="email" name="email">
+                </div>
+            </div>
+
+            <!-- Foto -->
+            <div class="grid-1" style="margin-top:15px;">
+                <div>
+                    <label>Foto de perfil</label>
+                    <input type="file" name="foto" accept="image/*">
+                </div>
+            </div>
+
+            <h4>Actualizar hábitos</h4>
+
+            <!-- Hábitos -->
+            <div class="grid-2">
+                <div>
+                    <label>Tipo de piel</label>
+                    <select name="tipo_piel">
+                        <option value="">Selecciona...</option>
+                        <option value="Seca">Seca</option>
+                        <option value="Grasa">Grasa</option>
+                        <option value="Mixta">Mixta</option>
+                        <option value="Normal">Normal</option>
+                        <option value="Sensible">Sensible</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Edad</label>
+                    <input type="number" name="edad" min="10" max="100">
+                </div>
+            </div>
+
+            <div class="botones">
+                <button type="submit" class="btn-guardar">Guardar cambios</button>
+                <button type="button" onclick="cerrarModal()" class="btn-cancelar">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+function cerrarModal() {
+    document.getElementById("modalEditar").style.display = "none";
+}
+</script>
+<script>
+function cerrarModal() {
+    document.getElementById("modalEditar").style.display = "none";
+}
+</script>
+
+
+<script>
+    function cerrarModal() {
+        document.getElementById("modalEditar").style.display = "none";
+    }
+
+    document.getElementById("formEditarPerfil").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const correoUsuario = localStorage.getItem("correo_usuario");
+
+        if (!correoUsuario) {
+            alert("No se encontró el correo del usuario. Debes iniciar sesión.");
+            return;
+        }
+
+        const formData = new FormData(this);
+        const datos = {};
+
+        formData.forEach((value, key) => {
+            if (value !== "") datos[key] = value;
+        });
+
+        try {
+            const response = await fetch(`/api/editar_usuario?correo=${correoUsuario}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(datos)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                alert("Error: " + result.detail);
+                return;
+            }
+
+            alert("Perfil actualizado correctamente");
+            cerrarModal();
+
+        } catch (error) {
+            alert("Error al actualizar el perfil");
+        }
+    });
+</script>
+
+<!-- ==========================
+     ESTILOS
+========================== -->
+<style>
+    body { font-family: "Poppins", sans-serif; background: linear-gradient(180deg, #fae9f2 0%, #f7f3ff 100%); color: #333; margin: 0; padding: 0; }
+    main { max-width: 750px; margin: 40px auto; background: #fff; padding: 35px; border-radius: 24px; box-shadow: 0 6px 25px rgba(182, 114, 231, 0.2); }
+
+    h1, h2, h3, h4 { color: #b97cf7; text-align: center; font-weight: 600; }
+
+    .perfil-info p, li { font-size: 16px; margin: 6px 0; color: #4a3b6b; }
 
     .habitos, .rutina {
         margin-top: 25px;
@@ -90,77 +330,36 @@
         border: 1px solid #f3cfff;
         padding: 18px;
         border-radius: 14px;
-        box-shadow: 0 3px 10px rgba(185, 124, 247, 0.1);
-    }
-
-    .habitos h3, .rutina h3 {
-        color: #a557e2;
-        margin-bottom: 10px;
-    }
-
-    .productos-recomendados {
-        margin-top: 30px;
-        background-color: #fff3fb;
-        padding: 20px;
-        border-radius: 18px;
-        border: 1px solid #f7c4e5;
-        box-shadow: 0 4px 15px rgba(255, 174, 217, 0.2);
-        animation: fadeIn 0.6s ease;
     }
 
     .productos-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 20px;
         margin-top: 15px;
     }
 
     .producto-card {
         background: white;
-        border-radius: 15px;
-        padding: 15px;
-        box-shadow: 0 4px 15px rgba(185, 124, 247, 0.15);
-        text-align: center;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        border: 1px solid #f3defd;
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 6px 18px rgba(185, 124, 247, 0.15);
+        border: 1px solid #f1d9ff;
+        transition: all 0.3s ease;
+        overflow: hidden;
     }
 
     .producto-card:hover {
-        transform: scale(1.03);
-        box-shadow: 0 6px 20px rgba(185, 124, 247, 0.25);
+        transform: translateY(-6px);
+        box-shadow: 0 14px 28px rgba(185, 124, 247, 0.25);
     }
 
     .producto-img {
         width: 100%;
-        height: 150px;
+        height: 220px;
         object-fit: cover;
-        border-radius: 12px;
-        margin-bottom: 10px;
-    }
-
-    .btn-producto {
-        display: inline-block;
-        margin-top: 10px;
-        padding: 8px 14px;
-        background: linear-gradient(90deg, #ffb6d5, #d69bff);
-        color: white;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 500;
-        transition: background 0.2s ease, transform 0.2s ease;
-    }
-
-    .btn-producto:hover {
-        background: linear-gradient(90deg, #f08fc0, #b97cf7);
-        transform: scale(1.05);
-    }
-
-    .botones-acciones {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 30px;
-        flex-wrap: wrap;
-        gap: 10px;
+        border-radius: 15px;
+        margin-bottom: 15px;
     }
 
     button {
@@ -168,147 +367,93 @@
         color: white;
         border: none;
         border-radius: 10px;
-        padding: 10px 22px;
+        padding: 11px 24px;
         cursor: pointer;
         font-weight: 600;
-        box-shadow: 0 3px 10px rgba(185, 124, 247, 0.3);
-        transition: all 0.2s ease-in-out;
     }
 
-    button:hover {
-        background: linear-gradient(90deg, #ffb6d5, #d69bff);
-        transform: scale(1.05);
-        box-shadow: 0 6px 18px rgba(185, 124, 247, 0.35);
+    button:hover { transform: scale(1.05); }
+
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 15px 40px rgba(182, 114, 231, 0.4);
+        position: relative;
     }
 
-    #btnGenerarRutina {
-        background: linear-gradient(90deg, #8a2be2, #00bfff);
-        margin-bottom: 15px;
-    }
-    #btnGenerarRutina:hover {
-        background: linear-gradient(90deg, #a052ff, #1e90ff);
+    .close {
+        position: absolute;
+        top: 12px;
+        right: 18px;
+        font-size: 32px;
+        cursor: pointer;
+        color: #aaa;
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    .close:hover { color: #e74c3c; }
 </style>
 
+<!-- ==========================
+     JAVASCRIPT
+========================== -->
 <script>
-const email = "{{ usuario.correo }}";
-const rutinaContainer = document.getElementById("rutinaContainer");
-const loadingRutina = document.getElementById("loadingRutina");
-
-// ======== Generar nueva rutina ========
 async function generarYMostrarRutina() {
-    rutinaContainer.innerHTML = "";
-    loadingRutina.textContent = "⚙️ Generando nueva rutina personalizada...";
+    const email = "{{ usuario.correo }}";
+    document.getElementById("loadingRutina").textContent = "Generando rutina...";
 
-    try {
-        const response = await fetch(`/api/generar_rutina?email=${encodeURIComponent(email)}`, { method: 'POST' });
-        const data = await response.json();
-        console.log("✅ Rutina generada:", data);
+    const res = await fetch(`/api/generar_rutina?email=${email}`, { method: "POST" });
+    const data = await res.json();
 
-        if (!response.ok) {
-            loadingRutina.textContent = `❌ ERROR: ${data.detail || 'Fallo al generar la rutina'}`;
-            return;
-        }
+    document.getElementById("loadingRutina").textContent = "";
 
-        const productos = data.productos_asociados || [];
+    const cont = document.getElementById("rutinaContainer");
+    cont.innerHTML = "";
 
-        if (productos.length === 0) {
-            loadingRutina.textContent = "⚠️ Rutina generada, pero no se asignaron productos.";
-            return;
-        }
-
-        loadingRutina.textContent = `✅ ${data.mensaje}. Aquí están tus ${productos.length} productos seleccionados:`;
-
-        productos.forEach(prod => {
-            const card = document.createElement("div");
-            card.classList.add("producto-card");
-            card.innerHTML = `
-                <img src="${prod.imagen || '/static/img/default-product.jpg'}" alt="${prod.nombre}" class="producto-img">
-                <h4>${prod.nombre}</h4>
-                <p><strong>Tipo:</strong> ${prod.descripcion || "N/A"}</p>
-                <p><strong>Piel:</strong> ${prod.tipo_piel || "General"}</p>
-                <p><strong>Precio:</strong> ${prod.precio || "N/A"}</p>
-            `;
-            rutinaContainer.appendChild(card);
-        });
-
-    } catch (error) {
-        console.error("❌ Error al generar rutina:", error);
-        loadingRutina.textContent = "❌ Error de conexión al generar la rutina.";
+    if (!data.productos_asociados) {
+        cont.innerHTML = "<p>No se generó rutina.</p>";
+        return;
     }
+
+    data.productos_asociados.forEach(p => {
+        cont.innerHTML += `
+            <div class="producto-card">
+                <img src="${p.imagen}" class="producto-img">
+                <h4>${p.nombre}</h4>
+                <p>${p.tipo}</p>
+                <p><strong>$${p.precio}</strong></p>
+            </div>
+        `;
+    });
 }
 
-// ======== Cargar rutina existente ========
-async function cargarRutinaExistente() {
-    try {
-        loadingRutina.textContent = "Cargando rutina guardada...";
-        const response = await fetch(`/api/rutina?email=${encodeURIComponent(email)}`);
-        const data = await response.json();
-        console.log("🔹 Rutina existente:", data);
-
-        if (response.ok && data.rutina) {
-            rutinaContainer.innerHTML = "";
-            loadingRutina.textContent = "✅ Rutina cargada correctamente";
-
-            for (const momento in data.rutina) {
-                const productosList = data.rutina[momento];
-                productosList.forEach(prod => {
-                    const card = document.createElement("div");
-                    card.classList.add("producto-card");
-                    card.innerHTML = `
-                        <img src="${prod.imagen || '/static/img/default-product.jpg'}" alt="${prod.nombre}" class="producto-img">
-                        <h4>${prod.nombre}</h4>
-                        <p><strong>Momento:</strong> ${momento}</p>
-                        <p><strong>Tipo:</strong> ${prod.descripcion || "N/A"}</p>
-                        <p><strong>Piel:</strong> ${prod.tipo_piel || "General"}</p>
-                        <p><strong>Precio:</strong> ${prod.precio || "N/A"}</p>
-                    `;
-                    rutinaContainer.appendChild(card);
-                });
-            }
-        } else {
-            loadingRutina.textContent = "No se encontró una rutina guardada. Presiona el botón para generar una.";
-        }
-    } catch (e) {
-        console.error(e);
-        loadingRutina.textContent = "❌ Error al cargar la rutina guardada.";
-    }
+function mostrarModalEditar() {
+    document.getElementById("modalEditar").style.display = "flex";
 }
 
+function cerrarModal() {
+    document.getElementById("modalEditar").style.display = "none";
+}
 
-async function editarUsuario() {
-    const nombre = prompt("Nuevo nombre:");
-    const tipo_piel = prompt("Nuevo tipo de piel:");
-    const edad = prompt("Nueva edad:");
+document.getElementById("formEditarPerfil").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    const formData = new FormData();
-    if (nombre) formData.append("nombre", nombre);
-    if (tipo_piel) formData.append("tipo_piel", tipo_piel);
-    if (edad) formData.append("edad", edad);
+    const formData = new FormData(e.target);
+    const correo_actual = "{{ usuario.correo }}";
 
-    const response = await fetch(`/api/editar_usuario?correo=${encodeURIComponent(email)}`, {
+    const res = await fetch(`/api/editar_usuario?correo=${correo_actual}`, {
         method: "PUT",
         body: formData
     });
 
-    const data = await response.json();
-    alert(data.mensaje || "Perfil actualizado");
+    const data = await res.json();
+    alert(data.mensaje);
     location.reload();
-}
-    async function eliminarUsuario() {
-    if (!confirm("¿Deseas eliminar tu perfil? Esta acción no se puede deshacer.")) return;
+});
+</script>
 
-    const response = await fetch(`/api/eliminar_usuario?correo=${encodeURIComponent(email)}`, {
-        method: "DELETE"
-    });
-
-    const data = await response.json();
-    alert(data.mensaje || "Usuario eliminado");
-    window.location.href = "/";
-}
-</script> {% endblock %}
+{% endblock %}

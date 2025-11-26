@@ -1,13 +1,14 @@
 import csv
 import unicodedata
-from random import random
+from random import random, shuffle
 
 from fastapi import (
     APIRouter, Request, Depends, Form, File, UploadFile, HTTPException, Query
 )
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select
+from sqlalchemy import select, delete
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from uuid import uuid4
@@ -141,63 +142,66 @@ async def leer_producto(producto_id: int, db: AsyncSession = Depends(get_db)):
     return producto
 
 
-# =====================================================
-# RUTINA PERSONALIZADA
-# =====================================================
 @router.post("/api/generar_rutina", tags=["Rutina"], summary="Generar rutina personalizada y guardarla")
 async def generar_rutina(email: str, db: AsyncSession = Depends(get_db)):
-    """
-    Genera una rutina personalizada para el usuario según sus hábitos y tipo de piel.
-    Guarda la rutina y los productos asociados.
-    """
     try:
-        # 🔹 Buscar usuario
-        usuario = (await db.execute(select(User).where(User.correo == email))).scalar_one_or_none()
+        # Buscar usuario
+        usuario = (await db.execute(
+            select(User).where(User.correo == email)
+        )).scalar_one_or_none()
+
         if not usuario:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-        # 🔹 Verificar si ya tiene una rutina creada
-        rutina_existente = (await db.execute(select(Rutina).where(Rutina.usuario_id == usuario.id))).scalar_one_or_none()
+        # Eliminar rutina anterior COMPLETA (rutina + productos asociados)
+        rutina_existente = (await db.execute(
+            select(Rutina).where(Rutina.usuario_id == usuario.id)
+        )).scalar_one_or_none()
+
         if rutina_existente:
+            await db.execute(
+                delete(RutinaProducto).where(RutinaProducto.rutina_id == rutina_existente.id)
+            )
             await db.delete(rutina_existente)
             await db.commit()
 
-        # 🔹 Crear nueva rutina
+        # Crear nueva rutina
         nueva_rutina = Rutina(usuario_id=usuario.id)
         db.add(nueva_rutina)
         await db.commit()
         await db.refresh(nueva_rutina)
 
-        # 🔹 Obtener todos los productos disponibles
+        # Obtener productos
         productos = (await db.execute(select(Producto))).scalars().all()
+
         if not productos:
-            raise HTTPException(status_code=404, detail="No hay productos disponibles para generar rutina")
+            raise HTTPException(status_code=404, detail="No hay productos disponibles")
 
         from random import shuffle
-        # 🔹 Seleccionar aleatoriamente productos de distintos tipos
         shuffle(productos)
-        productos_seleccionados = productos[:6]  # Escoge hasta 6 productos aleatorios
 
-        # 🔹 Asociar los productos seleccionados a la rutina
-        for producto in productos_seleccionados:
-            asociacion = RutinaProducto(rutina_id=nueva_rutina.id, producto_id=producto.id)
-            db.add(asociacion)
+        seleccionados = productos[:6]
+
+        # Asociar productos
+        for p in seleccionados:
+            db.add(RutinaProducto(rutina_id=nueva_rutina.id, producto_id=p.id))
 
         await db.commit()
 
+        # Respuesta limpia
         return {
-            "mensaje": "Rutina generada y guardada exitosamente",
+            "mensaje": "Rutina generada exitosamente",
             "usuario": usuario.correo,
             "productos_asociados": [
                 {
                     "id": p.id,
                     "nombre": p.product_name,
-                    "descripcion": p.product_type,
+                    "tipo": p.product_type,
                     "tipo_piel": p.skin_type,
                     "precio": p.price,
-                    "imagen": p.image_url
+                    "imagen": p.image_url or "https://via.placeholder.com/200"
                 }
-                for p in productos_seleccionados
+                for p in seleccionados
             ]
         }
 
@@ -269,43 +273,114 @@ async def obtener_rutina_usuario(email: str, db: AsyncSession = Depends(get_db))
 
 CSV_FILE = "/home/lunahcujar/PycharmProjects/Proyecto_Integrador/usuarios.csv"
 
+
+# app_/routes/usuario.py  (o donde tengas el router)
+from fastapi import APIRouter, HTTPException, Query, Body
+from sqlalchemy.orm import Session
 @router.put("/api/editar_usuario", tags=["Usuario"])
 async def editar_usuario(
     correo: str = Query(..., description="Correo del usuario a editar"),
-    nombre: str | None = Form(None),
-    tipo_piel: str | None = Form(None),
-    edad: int | None = Form(None)
+    datos: dict = Body(...),
+    db: AsyncSession = Depends(get_db)
 ):
-    if not os.path.exists(CSV_FILE):
-        raise HTTPException(status_code=404, detail="Archivo de usuarios no encontrado")
+    """
+    Edita cualquier campo del usuario y/o sus hábitos.
+    Puedes enviar solo los campos que quieras modificar.
+    """
+    try:
+        # ================================
+        # 1. Buscar usuario por correo
+        # ================================
+        usuario = (
+            await db.execute(select(User).where(User.correo == correo))
+        ).scalar_one_or_none()
 
-    usuarios = []
-    encontrado = False
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    # Leer usuarios
-    with open(CSV_FILE, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if row["correo"] == correo:
-                if nombre:
-                    row["nombre"] = nombre
-                if tipo_piel:
-                    row["tipo_piel"] = tipo_piel
-                if edad is not None:
-                    row["edad"] = str(edad)
-                encontrado = True
-            usuarios.append(row)
+        cambios = []
 
-    if not encontrado:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        # ================================
+        # 2. Editar campos del usuario
+        # ================================
+        if "nombre" in datos and datos["nombre"]:
+            usuario.nombre = datos["nombre"].strip()
+            cambios.append("nombre")
 
-    # Guardar cambios
-    with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["id","nombre","correo","tipo_piel","edad"])
-        writer.writeheader()
-        writer.writerows(usuarios)
+        # Nuevo: permitir cambiar el correo
+        if "correo" in datos and datos["correo"]:
+            nuevo_correo = datos["correo"].strip()
 
-    return {"mensaje": "Perfil actualizado correctamente", "correo": correo}
+            # Verificar que no exista ya
+            existe = (
+                await db.execute(select(User).where(User.correo == nuevo_correo))
+            ).scalar_one_or_none()
+
+            if existe and existe.id != usuario.id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Ese correo ya está registrado por otro usuario"
+                )
+
+            usuario.correo = nuevo_correo
+            cambios.append("correo")
+
+        # ================================
+        # 3. Obtener o crear hábitos
+        # ================================
+        habito = (
+            await db.execute(select(Habito).where(Habito.usuario_id == usuario.id))
+        ).scalar_one_or_none()
+
+        if not habito:
+            habito = Habito(usuario_id=usuario.id)
+            db.add(habito)
+
+        # ================================
+        # 4. Actualizar hábitos
+        # ================================
+        campos_habito = {
+            "tipo_piel": str,
+            "edad": int,
+            "lavarse_cara": lambda x: str(x).lower() in ["true", "1", "yes", "sí", "si"],
+            "protector_solar": lambda x: str(x).lower() in ["true", "1", "yes", "sí", "si"],
+            "exfoliacion": str,
+            "objetivo": str,
+        }
+
+        for campo, tipo in campos_habito.items():
+            if campo in datos:
+                val = datos[campo]
+                if val in ["", None]:
+                    setattr(habito, campo, None)
+                else:
+                    try:
+                        setattr(habito, campo, tipo(val))
+                    except:
+                        setattr(habito, campo, None)
+
+                cambios.append(campo)
+
+        # ================================
+        # 5. Guardar cambios
+        # ================================
+        await db.commit()
+        await db.refresh(usuario)
+        await db.refresh(habito)
+
+        return {
+            "mensaje": "Perfil actualizado correctamente",
+            "usuario": usuario.correo,
+            "campos_actualizados": cambios or ["No cambiaste ningún campo"]
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        print("[ERROR EDITAR USUARIO]", str(e))
+        raise HTTPException(status_code=500, detail="Error al actualizar el perfil")
+
 
 
 @router.delete("/api/eliminar_usuario", tags=["Usuario"])
